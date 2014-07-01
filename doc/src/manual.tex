@@ -30,15 +30,16 @@ Small RNAs are key regulators of gene expression, such as miRNA, siRNA, and piRN
 
 \subsection{Dependencies}
 
-tsRFinder depended on the following programmes, please check and install the following at first:
+tsRFinder depended on the following programmes, please check and install the following \footnote{The dependency versions were based on the oldest test enviroment we have.} at first:
+
 
 \begin{itemize}
 
-\item Perl, required, for tsRFinder.pl execution. And it was always installed already in most of the UNIX-like operating systems.
-\item tRNAscan-SE, required, for tRNA prediction. \\http://lowelab.ucsc.edu/tRNAscan-SE
-\item bowtie, required, for small RNA mapping. \\https://github.com/BenLangmead/bowtie
-\item R, required, for small RNA data analysis and illustration. \\http://www.r-project.org
-\item fastx\_toolkit, optional if you have already processed the raw sequencing data yourself. \\http://hannonlab.cshl.edu/fastx\_toolkit/
+\item Perl, greater than v5.16.2, required, for tsRFinder.pl execution. And it was always installed already in most of the UNIX-like operating systems.
+\item tRNAscan-SE, greater than v1.3.1, required, for tRNA prediction. \\http://lowelab.ucsc.edu/tRNAscan-SE
+\item bowtie, greater than v1.0.0, required, for small RNA mapping. \\https://github.com/BenLangmead/bowtie
+\item R, greater than v2.15.2, required, for small RNA data analysis and illustration. \\http://www.r-project.org
+\item fastx\_toolkit, greater than v0.0.14, optional if you have already processed the raw sequencing data yourself. \\http://hannonlab.cshl.edu/fastx\_toolkit/
 
 \end{itemize}
 
@@ -46,7 +47,7 @@ tsRFinder depended on the following programmes, please check and install the fol
 
 tsRFinder is maintained on GitHub and is ready-to-use, no compilation is required. However, if you take some time to improve the configuration, it may save you a lot of time for trouble shooting.
 
-First, you can clone\footnote{If git is not installed, download it from http://git-scm.com} tsRFinder by typing:
+First, you can clone \footnote{If git is not installed, download it from http://git-scm.com} tsRFinder by typing:
 
 {\small \begin{verbatim}
 git clone https://github.com/wangqinhu/tsRFinder.git
@@ -64,8 +65,8 @@ and then unzip master file.
 When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment. For example, if tsRFinder is placed in /Users/wangqinhu/tsRFinder, then typing following in the terminal if you are using bash.
 
 {\small \begin{verbatim}
-echo export PATH="/home/user/tsRFinder:$PATH" >> ~/.bashrc
-echo export tsR_dir="/home/user/tsRFinder" >> ~/.bashrc
+echo export PATH="/your/path/of/tsRFinder:$PATH" >> ~/.bashrc
+echo export tsR_dir="/your/path/of/tsRFinder" >> ~/.bashrc
 source ~/.bashrc
 \end{verbatim}}
 
@@ -183,6 +184,8 @@ tsRNA report : /Users/wangqinhu/tsRFinder/Abc/tsRNA.report.xls
     text map : /Users/wangqinhu/tsRFinder/Abc/tsRNA.tmap
 
   visual map : /Users/wangqinhu/tsRFinder/Abc/images
+
+distribution : /Users/wangqinhu/tsRFinder/Abc/distribution.pdf
 
 ---------
 \end{verbatim}

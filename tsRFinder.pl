@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.1';
+my $version = '0.2';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -85,6 +85,9 @@ sub find_tsRNA {
 	# tsRNA identification
 	define_tsRNA();
 
+	# sRNA/tRNA distribution
+	draw_distribution();
+
 	# Write report file
 	write_report();
 
@@ -142,6 +145,7 @@ sub clean_data {
 	system("rm $label/tRNA.fas");
 	system("rm *.Rout");
 	system("rm BDI.txt infile.txt");
+	system("rm *.len");
 
 }
 
@@ -943,6 +947,9 @@ sub write_report {
 	print_log("    text map : $tsR_dir/$label/tsRNA.tmap\n");
 	print_log("  visual map : $tsR_dir/$label/images\n");
 
+	# sRNA/tRNA distribution
+	print_log("distribution : $tsR_dir/$label/distribution.pdf\n");
+
 	print_log("---------");
 
 }
@@ -963,6 +970,49 @@ sub read_stat {
 
 	return ($total, $unique);
 
+}
+
+# Generate small RNA length distribution
+sub draw_distribution {
+
+	print_log("Drawing sRNA/tRNA distribution");
+	srna_len_stat("$tsR_dir/$label/sRNA.fa");
+	system("mv read.len srna.len");
+	srna_len_stat("$tsR_dir/$label/tRNA.read.fa");
+	system("mv read.len trna.len");
+	system("R CMD BATCH $tsR_dir/lib/draw_distribution.r");
+	system("mv distribution.pdf $tsR_dir/$label/");
+
+}
+
+# Small RNA length statistics
+sub srna_len_stat {
+
+	my ( $file ) = @_;
+
+	open (IN, $file) or die "Cannot open file $file: $!\n";
+	my %read = ();
+	my $read = undef;
+	while (<IN>) {
+		if (/^\S+[\_|\||\-](\S+)/) {
+			$read = <IN>;
+			chomp $read;
+			$read{length($read)} += $1;
+		}
+	}
+	close IN;
+
+	open (DAT, ">read.len") or die "Cannot open file read.len: $!\n";
+	foreach (sort by_num keys %read) {
+		print DAT $_, "\t", $read{$_}, "\n";
+	}
+	close DAT;
+
+}
+
+# sort by number
+sub by_num {
+	$a <=> $b; 
 }
 
 # usage
