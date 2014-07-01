@@ -375,7 +375,7 @@ sub format_reads {
 		# Build a clean sRNA reads from raw data
 		process_raw($file);
 		# Format fasta file required by tsRFinder
-		format_fasta("$label/_raw/srna.ctcfa", "$label/sRNA.fa");
+		format_fasta("$label/_raw/srna.clcfa", "$label/sRNA.fa");
 	# For fasta format
 	} elsif ($file_type eq "fa") {
 		# Format fasta file required by tsRFinder
@@ -485,7 +485,7 @@ sub process_raw {
 	# 18-30 nt is OK but may lose some large tsRNA reads
 	print_log("Remove reads length less than 15 ...");
 	if ( $lrl >= 15 && $lrl <=50 ) {
-		system("fastx_trimmer -i $label/_raw/srna.cfa -o $label/_raw/srna.tcfa -m $lrl");	
+		fasta_len_filter("$label/_raw/srna.cfa", "$label/_raw/srna.lcfa", "$lrl");
 	} else {
 		print_log("lowest_read_length less than 15 or more than 50!");
 		exit;
@@ -493,10 +493,30 @@ sub process_raw {
 	
 	# Collapse the fasta sequence to generate a non-redundant fasta file	
 	print_log("Collapsing ...");
-	system("fastx_collapser -v -i $label/_raw/srna.tcfa -o $label/_raw/srna.ctcfa");
+	system("fastx_collapser -v -i $label/_raw/srna.lcfa -o $label/_raw/srna.clcfa");
 
 }
 
+# Fasta sequence length filter
+sub fasta_len_filter {
+
+	my ($input, $output, $len) = @_;
+
+	open (IN, $input) or die "Cannot open file $input: $!\n";
+	open (OUT, ">$output") or die "Cannot open file $output: $!\n";
+	while (my $id = <IN>) {
+		my $seq = <IN>;
+		chomp $seq;
+		$seq =~ s/\s+//g;
+		if (length($seq) >= $len) {
+			print OUT $id;
+			print OUT $seq, "\n";
+		}
+	}
+	close IN;
+	close OUT;
+
+}
 # Begin log file
 sub start_log {
 
