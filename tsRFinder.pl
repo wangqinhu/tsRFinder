@@ -981,6 +981,9 @@ sub write_report {
 	# sRNA/tRNA distribution
 	print_log("distribution : $tsR_dir/$label/distribution.pdf\n");
 
+	# statistical measurement
+	stat_index();
+
 	print_log("---------");
 
 }
@@ -1046,6 +1049,147 @@ sub srna_len_stat {
 
 }
 
+sub stat_index {
+
+	my ($sm_hash) = statistical_measure("$tsR_dir/$label/tsRNA.tmap");
+
+	my @sen = ();
+	my @spe = ();
+    my @acc = ();
+	my $i = 0;
+
+	foreach (keys $sm_hash) {
+		my $stat = $sm_hash->{$_};
+		my ($tp, $fn, $fp, $tn) = split /\t/, $stat;
+		$sen[$i] = sensitivity($tp, $fn);
+		$spe[$i] = specificity($tn, $fp);
+		$acc[$i] = accuracy($tp, $fn, $fp, $tn);
+		$i++;
+	}
+
+	my $sen = mean(@sen);
+	my $spe = mean(@spe);
+	my $acc = mean(@acc);
+
+	print_log("stat. by BDI :");
+	print_log(" Sensitivity : $sen");
+	print_log(" Specificity : $spe");
+	print_log("    Accuracy : $acc\n");
+
+}
+
+# Math: mean
+sub mean {
+
+	my @num = @_;
+
+	my $mean = 0;
+	foreach (@num) {
+		$mean += $_;
+	}
+	$mean /= @num;
+
+	return $mean;
+
+}
+
+# True postive rate
+sub sensitivity {
+
+	my ($tp, $fn) = @_;
+	my $sen = $tp / ($tp + $fn);
+	return $sen;
+
+}
+
+# True nagtive rate
+sub specificity {
+
+	my ($tn, $fp) = @_;
+	my $spe = $tn / ($fp + $tn);
+	return $spe;
+
+}
+
+# Prediction accuracy
+sub accuracy {
+
+	my ($tp, $fn, $fp, $tn) = @_;
+	my $acc = ($tp + $tn) / ($tp + $fn + $fp + $tn);
+	return $acc;
+
+}
+
+# Caculate ture/false postive/negative
+sub statistical_measure {
+
+	my ( $tmap ) = @_;
+
+	my %tmap = ();
+	my $id = undef;
+	my ($tp, $fn, $fp, $tn) = (0, 0, 0, 0);
+
+	open (IN, $tmap) or die "Cannot open file $tmap: $!\n";
+	while (<IN>) {
+		if ( /^\<tmap/ ) {
+			$id = <IN>;
+			chomp $id;
+			my ($discard, $id) = split /\t/, $id;
+			my $dicard = <IN>;
+			my $seq1 = <IN>;
+			my $seq2 = undef;
+			my $bdi  = undef;
+			my $next = <IN>;
+			if ( $next =~ /\*/) {
+				$seq2 = $next;
+				$bdi  = <IN>;
+			} else {
+				$bdi = $next;
+			}
+			($seq1, $discard) = split /\t/, $seq1;
+			if (defined($seq2)) {
+				($seq2, $discard) = split /\t/, $seq2;
+			}
+			($bdi, $discard) = split /\t/, $bdi;
+			for (my $i = 0; $i< length($seq1); $i++) {
+				my $cbdi = substr($bdi,$i,1);
+				# if bdi > 1
+				if ( $cbdi >= 1 ) {
+					# if has tsRNA base => true postive
+					if (substr($seq1,$i,1) ne "*" ) {
+						$tp++;
+					} elsif (defined($seq2) && substr($seq2,$i,1) ne "*") {
+						$tp++;
+					# if has no tsRNA base => false negative
+					} else {
+						$fn++;
+					}
+				# if bdi = 0
+				} else {
+					# if has tsRNA base => false postive
+					if (substr($seq1,$i,1) ne "*" ) {
+						$fp++;
+					} elsif (defined($seq2) && substr($seq2,$i,1) ne "*") {
+						$fp++;
+					# if has no tsRNA base => true negative
+					} else {
+						$tn++;
+					}
+				}
+
+				#reset current bdi
+				$cbdi = 0;
+			}
+			$tmap{$id} = "$tp\t$fn\t$fp\t$tn";
+			# reset vars
+			($tp, $fn, $fp, $tn) = (0, 0, 0, 0);
+		}
+	}
+
+	return (\%tmap);
+
+}
+
 # usage
 sub usage {
 
@@ -1061,8 +1205,8 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  min read length
-    -x  max read length
+    -n  Min read length
+    -x  Max read length
     -h  Help
     -v  Version
 

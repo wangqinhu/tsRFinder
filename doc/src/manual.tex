@@ -30,7 +30,7 @@ Small RNAs are key regulators of gene expression, such as miRNA, siRNA, and piRN
 
 \subsection{Dependencies}
 
-tsRFinder depended on the following programmes, please check and install the following \footnote{The dependency versions were based on the oldest test enviroment we have.} at first:
+tsRFinder depends on the following programmes, please check and install them \footnote{The dependency versions were based on the oldest test enviroment we have.} at first:
 
 
 \begin{itemize}
@@ -39,7 +39,7 @@ tsRFinder depended on the following programmes, please check and install the fol
 \item tRNAscan-SE, greater than v1.3.1, required, for tRNA prediction. \\http://lowelab.ucsc.edu/tRNAscan-SE
 \item bowtie, greater than v1.0.0, required, for small RNA mapping. \\https://github.com/BenLangmead/bowtie
 \item R, greater than v2.15.2, required, for small RNA data analysis and illustration. \\http://www.r-project.org
-\item fastx\_toolkit, greater than v0.0.14, optional if you have already processed the raw sequencing data yourself. \\http://hannonlab.cshl.edu/fastx\_toolkit/
+\item fastx\_toolkit, greater than v0.0.14, optional if you have already processed the raw sequencing data yourself. \\https://github.com/agordon/fastx\_toolkit
 
 \end{itemize}
 
@@ -62,7 +62,7 @@ https://codeload.github.com/wangqinhu/tsRFinder/zip/master
 
 and then unzip master file.
 
-When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment. For example, if tsRFinder is placed in /Users/wangqinhu/tsRFinder, then typing following in the terminal if you are using bash.
+When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment. For example, if tsRFinder is placed in /your/path/of/tsRFinder, then type the following in the terminal if you are using bash.
 
 {\small \begin{verbatim}
 echo export PATH="/your/path/of/tsRFinder:$PATH" >> ~/.bashrc
@@ -84,7 +84,7 @@ We strongly recommend you using the reference genome sequence and the raw small 
 
 tsRFinder supplies two ways for inputs, you can use both configuration file or command line option. We recommend you use a command line option for debugging and building your configuration file. Once your inputs had been determined, you can write it to a configuration file for your analysis.
 
-If tsRFinder is properly installed, you can run tsRFinder from your terminal directly, see the usage of tsRFinder.
+If tsRFinder is properly installed, you can run tsRFinder from your terminal directly, see the usage below.
 
 {\small \begin{verbatim}
 tsRFinder usage:
@@ -97,8 +97,8 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  min read length
-    -x  max read length
+    -n  Min read length
+    -x  Max read length
     -h  Help
     -v  Version
 
@@ -189,6 +189,11 @@ tsRNA report : /Users/wangqinhu/tsRFinder/Abc/tsRNA.report.xls
 
 distribution : /Users/wangqinhu/tsRFinder/Abc/distribution.pdf
 
+stat. by BDI :
+ Sensitivity : 0.940025252525252
+ Specificity : 0.783809523809524
+    Accuracy : 0.876447574334898
+
 ---------
 \end{verbatim}
 }
@@ -196,7 +201,7 @@ distribution : /Users/wangqinhu/tsRFinder/Abc/distribution.pdf
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=12cm]{distribution.pdf}
-\caption{Screenshot of color tmap} 
+\caption{Small RNA and tRNA reads distribution}
 \label{distribution}
 \end{center}
 \end{figure}
@@ -223,7 +228,7 @@ vim tsRNA.tmap
 \end{center}
 \end{figure}
 
-If you preferred a plain text view without highlighting, just open tsRNA.tmap with any kind of text editors you have.
+If you prefer plain text view without highlighting, just open tsRNA.tmap with any kind of text editors you have.
 
 \section{FAQ}
 
