@@ -41,7 +41,8 @@ my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
 my $srna     = $option{s} || $config{"sRNA"};
 my $adaptor  = $option{a} || $config{"adaptor"};
-my $lrl      = $option{n} || $config{"lowest_read_length"};
+my $minrl    = $option{n} || $config{"min_read_length"};
+my $maxrl    = $option{x} || $config{"max_read_length"};
 
 find_tsRNA();
 
@@ -483,11 +484,20 @@ sub process_raw {
 	# A high quality sequencing also generate very few too short reads
 	# We recommend the reads length is between 15-50 nt
 	# 18-30 nt is OK but may lose some large tsRNA reads
-	print_log("Remove reads length less than 15 ...");
-	if ( $lrl >= 15 && $lrl <=50 ) {
-		fasta_len_filter("$label/_raw/srna.cfa", "$label/_raw/srna.lcfa", "$lrl");
+	print_log("Remove reads length less than 15 or more than 50 ...");
+	if ( $minrl >= 15 && $minrl <=50 ) {
+		if ( $maxrl >= 15 or $maxrl <=50 ) {
+			if ( $minrl <= $maxrl ) {
+				fasta_len_filter("$label/_raw/srna.cfa", "$label/_raw/srna.lcfa", "$minrl");
+			} else {
+				print_log("min_read_length larger than max_read_length, please check your configuration file!\n");
+				exit;
+			}
+		} else {
+			print_log("max_read_length less than 15 or more than 50!");
+		}
 	} else {
-		print_log("lowest_read_length less than 15 or more than 50!");
+		print_log("min_read_length less than 15 or more than 50!");
 		exit;
 	}
 	
@@ -517,6 +527,7 @@ sub fasta_len_filter {
 	close OUT;
 
 }
+
 # Begin log file
 sub start_log {
 
@@ -1011,28 +1022,28 @@ sub srna_len_stat {
 	my ( $file ) = @_;
 
 	open (IN, $file) or die "Cannot open file $file: $!\n";
-	my %read = ();
+	my @read = ();
+
+	foreach ($minrl .. $maxrl) {
+		$read[$_] = 0;
+	}
+
 	my $read = undef;
 	while (<IN>) {
 		if (/^\S+[\_|\||\-](\S+)/) {
 			$read = <IN>;
 			chomp $read;
-			$read{length($read)} += $1;
+			$read[length($read)] += $1;
 		}
 	}
 	close IN;
 
 	open (DAT, ">read.len") or die "Cannot open file read.len: $!\n";
-	foreach (sort by_num keys %read) {
-		print DAT $_, "\t", $read{$_}, "\n";
+	foreach ($minrl .. $maxrl) {
+		print DAT $_, "\t", $read[$_], "\n";
 	}
 	close DAT;
 
-}
-
-# sort by number
-sub by_num {
-	$a <=> $b; 
 }
 
 # usage
@@ -1050,7 +1061,8 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  Lowest read length
+    -n  min read length
+    -x  max read length
     -h  Help
     -v  Version
 

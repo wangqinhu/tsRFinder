@@ -97,13 +97,14 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  Lowest read length
+    -n  min read length
+    -x  max read length
     -h  Help
     -v  Version
 
 Example:
 
-    tsRFinder.pl -c tsR.conf
+    tsRFinder.pl -c demo/tsR.conf
 \end{verbatim}}
 
 \section{Demo}
@@ -140,10 +141,11 @@ reference_genome    :  demo/genome.fa
 reference_tRNA      :  NA
 sRNA                :  demo/sRNA.fq
 adaptor             :  TGGAATTCTCGGGTGCCAAGG
-lowest_read_length  :  15
+min_read_length     :  18
+max_read_length     :  45
 \end{verbatim}
 
-Currently we have 6 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}); the paths of reference genome and small RNA should be also supplied at least. If you are using a raw sequence data, please also input the adaptor sequence, and the shortest read you want to keep. If you are not using a reference tRNA prepared by yourself, leave this argument to "NA" please.
+Currently we have 7 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}); the paths of reference genome and small RNA should be also supplied at least. If you are using a raw sequence data, please also input the adaptor sequence, and the shortest read you want to keep. If you are not using a reference tRNA prepared by yourself, leave this argument to "NA" please.
 
 Once your configuration file is well prepared, typing the following in the terminal to run tsRFinder. In this demo, the configuration file is at demo/tsR.conf, so we write like this:
 
@@ -155,7 +157,7 @@ cd tsR_dir
 
 \subsection{Demo output}
 
-By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), the text map (tmap) of small RNA mapped to tRNA, also graphics showing the expression evaluated by small RNA data.
+By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), the text map (tmap) of small RNA mapped to tRNA, also graphics showing the expression evaluated by small RNA data. Additional, tsRFinder supplies a figure showing the small RNA and tRNA reads length distribution (Figure \ref{distribution}) for you.
 
 See our demo summary here:
 
@@ -168,8 +170,8 @@ See our demo summary here:
        Total : 5
 
   sRNA reads : /Users/wangqinhu/tsRFinder/Abc/sRNA.fa
-       Total : 12456
-      Unique : 7432
+       Total : 12432
+      Unique : 7412
 
   tRNA reads : /Users/wangqinhu/tsRFinder/Abc/tRNA.read.fa
        Total : 286
@@ -190,6 +192,14 @@ distribution : /Users/wangqinhu/tsRFinder/Abc/distribution.pdf
 ---------
 \end{verbatim}
 }
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=12cm]{distribution.pdf}
+\caption{Screenshot of color tmap} 
+\label{distribution}
+\end{center}
+\end{figure}
 
 \subsection{Visualization of tmap data}
 
