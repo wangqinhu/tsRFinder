@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.2';
+my $version = '0.3';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -88,6 +88,9 @@ sub find_tsRNA {
 
 	# sRNA/tRNA distribution
 	draw_distribution();
+
+	# cleavage position
+	find_cleavage_site();
 
 	# Write report file
 	write_report();
@@ -981,6 +984,9 @@ sub write_report {
 	# sRNA/tRNA distribution
 	print_log("distribution : $tsR_dir/$label/distribution.pdf\n");
 
+	# tRNA cleavage site
+	print_log("    cleavage : $tsR_dir/$label/cleavage.txt\n");
+
 	# statistical measurement
 	stat_index();
 
@@ -1188,6 +1194,105 @@ sub statistical_measure {
 
 	return (\%tmap);
 
+}
+
+# Find cleavage sites
+sub find_cleavage_site {
+
+	my ($cp_hash) = cleavage_pattern("$tsR_dir/$label/tsRNA.tmap");
+
+	print_log("Gathering cleavage information ...");
+
+	open (CLVG, ">$tsR_dir/$label/cleavage.txt");
+	print CLVG "tRNA\ttsR5\ttsR3\n";
+	foreach (keys $cp_hash) {
+		print CLVG $_, "\t", $cp_hash->{$_},"\n";
+	}
+	close CLVG;
+
+}
+
+# Cleavage information
+# Definition:
+#                Anticodon
+#                ---------
+#                    |
+#                  -----
+# NNNNNNNNNNN--N-N-X-X-X-N-N-NNNNNNNNNNN
+#         >>.  . . . . . . < <
+#            |  | | | | | | |
+# 5' tsR    -2 -1 0 1 | | | |
+#                     | | | |
+#                    -1 0 1 2  3' tsR
+#
+# N - nucleotide
+# X - Anticodon nucleotide
+sub cleavage_pattern {
+
+	my ( $tmap ) = @_;
+
+	# Distance from anticodon
+	my %dac = ();
+	my $id  = undef;
+
+	open (IN, $tmap) or die "Cannot open file $tmap: $!\n";
+	while (<IN>) {
+		if ( /^\<tmap/ ) {
+
+			# read basic information
+			my $trnaseq = <IN>;
+			chomp $trnaseq;
+			($trnaseq, $id) = split /\t/, $trnaseq;
+			my $str  = <IN>;
+			chomp $str;
+			my $seq1 = <IN>;
+			my $discard = undef;
+			($seq1, $discard) = split /\t/, $seq1;
+			my $seq2 = undef;
+			my $next = <IN>;
+			if ( $next =~ /\*/) {
+				$seq2 = $next;
+				($seq2, $discard) = split /\t/, $seq2;
+			}
+
+			# Begin stat
+			# 1   Determine anticodon position
+			# 1.1 Capture anticodon
+			my $anticodon = undef;
+			($discard, $anticodon) = split /\-/, $id;
+			$anticodon = substr($anticodon, 3, 3);
+			# 1.2 Parse tRNA struture
+			my ($arm5, $loop) = ();
+			if ( $str =~
+				m/	(^[\>|\.]+\>\.+\<[\<|\.]+		# first loop
+					  [\>|\.]+\>)(\.+)\<[\<|\.]+	# second loop
+					  [\>|\.]+\>\.+\<[\<|\.]+		# third loop, varloop or the last loop
+				/x) {
+				$arm5 = length($1);
+				$loop = length($2);
+			}
+			# 1.3 Determine the start and end of anticodon position
+			my $anticodon_region = substr($trnaseq, $arm5, $loop);
+			$anticodon_region =~ /(\S+)$anticodon\S+/;
+			my $anticodon_start = $arm5 + length($1);
+			my $anticodon_end = $anticodon_start + 3;
+			# 2   Caculate 5' tsRNA (end) distance from anticodon (start)
+			if ($seq1 =~ /(\*{0,20}[ATCGNatcgn]+)\*/) {
+				my $seq1_end = length($1);
+				$dac{$id} = $seq1_end - $anticodon_start;
+			}
+			# 3   Caculate 3' tsRNA (start) distance from anticodon (end)
+			if (defined($seq2) && $seq2 =~ /(^\*{20,})[ATCGNatcgn]+/) {
+				my $seq2_start = length($1);
+				my $dac = $seq2_start - $anticodon_end;
+				$dac{$id} = $dac{$id} . "\t" . $dac;
+			} else {
+				$dac{$id} = $dac{$id} . "\t" . "NA";
+			}
+		}
+	}
+
+	return \%dac;
 }
 
 # usage

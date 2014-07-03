@@ -78,11 +78,11 @@ And now, you can running tsRFinder for your dataset.
 
 Before running tsRFinder, you are asked to prepare/download the following two files: (1) the reference genome sequence, or the reference tRNA sequence and, (2) the small RNA reads.
 
-We strongly recommend you using the reference genome sequence and the raw small RNA sequencing data, since tsRFinder can help you prepare the reference tRNA data and clean small RNA data automatically. If you want to prepare the tRNA file and small RNA reads file by yourself, you can running the demo data and then find what exact format of tRNA reference and small RNA reads file can be accepted instead, this is allowed by not encouraged. 
+We strongly recommend you using the reference genome sequence and the raw small RNA sequencing data, since tsRFinder can help you prepare the reference tRNA data and clean small RNA data automatically. If you want to prepare the tRNA file and small RNA reads file by yourself, you can run the demo data and then find what exact format of tRNA reference and small RNA reads file can be accepted instead, this is allowed but not encouraged. 
 
 \subsection{Running the pipeline}
 
-tsRFinder supplies two ways for inputs, you can use both configuration file or command line option. We recommend you use a command line option for debugging and building your configuration file. Once your inputs had been determined, you can write it to a configuration file for your analysis.
+tsRFinder supplies two ways for inputs, you can use both configuration file and command line option. We recommend you use a command line option for debugging and building your configuration file. Once your inputs have been determined, you can write it to a configuration file for your analysis.
 
 If tsRFinder is properly installed, you can run tsRFinder from your terminal directly, see the usage below.
 
@@ -111,7 +111,7 @@ Example:
 
 \subsection{Demo data}
 
-\textbf{Demo refseq}: we used serval random sequences embedded with some real tRNA as a pseudo reference genome sequence. This small sequence data in fasta format can be accessed in the file "tsRFinder/demo/genome.fa". In your analysis, if you have a reference genome, just replace it with the reference sequence; if you don't have reference genome sequence, you can use the reference tRNA sequence instead. Figure \ref{refseq} shows what a refseq file look like.
+\textbf{Demo refseq}: we used serval random sequences embedded with some real tRNAs as pseudo reference genome sequence. This small sequence data in fasta format can be accessed in the file "tsRFinder/demo/genome.fa". In your analysis, if you have a reference genome, just replace it with the reference sequence; if you don't have reference genome sequence, you can use the reference tRNA sequence instead. Figure \ref{refseq} shows what a refseq file look like.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -157,7 +157,7 @@ cd tsR_dir
 
 \subsection{Demo output}
 
-By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), the text map (tmap) of small RNA mapped to tRNA, also graphics showing the expression evaluated by small RNA data. Additional, tsRFinder supplies a figure showing the small RNA and tRNA reads length distribution (Figure \ref{distribution}) for you.
+By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), the text map (tmap) of small RNA mapped to tRNA, the graphics showing the expression evaluated by small RNA data, also the cleavage site. Additional, tsRFinder supplies a figure showing the small RNA and tRNA reads length distribution (Figure \ref{distribution}) for you.
 
 See our demo summary here:
 
@@ -188,6 +188,8 @@ tsRNA report : /Users/wangqinhu/tsRFinder/Abc/tsRNA.report.xls
   visual map : /Users/wangqinhu/tsRFinder/Abc/images
 
 distribution : /Users/wangqinhu/tsRFinder/Abc/distribution.pdf
+
+    cleavage : /Users/wangqinhu/tsRFinder/Abc/cleavage.txt
 
 stat. by BDI :
  Sensitivity : 0.940025252525252
