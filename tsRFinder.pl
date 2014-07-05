@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.3';
+my $version = '0.4';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -91,6 +91,9 @@ sub find_tsRNA {
 
 	# cleavage position
 	find_cleavage_site();
+
+	# family
+	srna_family("$tsR_dir/$label/tsRNA.seq");
 
 	# Write report file
 	write_report();
@@ -987,6 +990,9 @@ sub write_report {
 	# tRNA cleavage site
 	print_log("    cleavage : $tsR_dir/$label/cleavage.txt\n");
 
+	# tRNA family
+	print_log("tsRNA family : $tsR_dir/$label/tsRNA.fam\n");
+
 	# statistical measurement
 	stat_index();
 
@@ -1293,6 +1299,72 @@ sub cleavage_pattern {
 	}
 
 	return \%dac;
+}
+
+# Class tsRNA
+sub srna_family {
+
+	my ($file) = @_;
+
+	print_log("Classing sRNA ...");
+
+	my %seq = ();
+	my @fam = ();
+
+	open (IN, $file) or die "Cannot open file $file: $!\n";
+	while (<IN>) {
+		chomp;
+		my @w = split /\t/;
+		$seq{$w[0]} = $w[2];
+	}
+	close IN;
+
+	# Pairwise distance
+	my %pairwise = ();
+	my @ids = sort keys %seq;
+
+	# Class status:
+	# 0 - not classed
+	# 1 - classed
+	my %class = ();
+	foreach (@ids) {
+		$class{$_} = 0;
+	}
+
+	my $fam_index = 0;
+	for (my $i = 0; $i < @ids; $i++) {
+		my $id1 = $ids[$i];
+		if ($class{$id1} == 0) {
+			$class{$id1} = 1;
+			$fam[$fam_index] = $id1;
+			for (my $j = $i+1; $j < @ids; $j++ ) {
+				my $id2 = $ids[$j];
+				my $id = $id1 . "\t" . $ids[$j];
+				$pairwise{$id}= `$tsR_dir/lib/nwalign -s -a $seq{$id1} -b $seq{$id2}`;
+				if ($pairwise{$id} > 65) {
+					$class{$id2} = 1;
+					$fam[$fam_index] .= "\t$id2";
+				}
+			}
+			$fam_index++;
+		} else {
+			next;
+		}
+	}
+
+	open (CLS, ">$tsR_dir/$label/tsRNA.fam") or die "Cannot open file tsRNA.fam: $!\n";
+	foreach (reverse sort by_len values @fam) {
+		print CLS $_, "\n";
+	}
+	close CLS;
+
+}
+
+# Sort by length
+sub by_len {
+
+	length($a) <=> length($b);
+
 }
 
 # usage
