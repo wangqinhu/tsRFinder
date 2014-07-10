@@ -143,6 +143,11 @@ sub init {
 		%config = $cfg->vars();
 	}
 
+	# Check critical dependency
+	check_install("bowtie-build");
+	check_install("bowtie");
+	check_install("R");
+
 }
 
 # Stop tsRFinder
@@ -287,6 +292,8 @@ sub run_tRNAscanSE {
 	my $ss_file = "trna.ss";
 
 	print_log("Predicting tRNA ...");
+
+	check_install("tRNAscan-SE");
 
 	system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
 
@@ -511,6 +518,11 @@ sub format_fasta {
 sub process_raw {
 
 	my ($file) = @_;
+
+	# Check fastx_tool kit
+	check_install("fastq_to_fasta");
+	check_install("fastx_clipper");
+	check_install("fastx_collapser");
 
 	unless ( -e $file) {
 		print_log("No such file: $file");
@@ -1470,6 +1482,20 @@ sub os_index {
 		die "Unknown Operating System!\n";
 	}
 	return $index;
+}
+
+# Check dependency
+sub check_install {
+
+	my ($app) = @_;
+
+	my $which = `which $app`;
+	chomp $which;
+	my @w = split /\//, $which;
+	if (!defined($w[-1]) or $w[-1] ne "$app") {
+		print_log("\n\n\nWARNING:\n$app IS NOT INSTALLED!!\n\n\n");
+		exit;
+	}
 }
 
 # usage
