@@ -2,3 +2,7 @@
 .RData
 tsRFinder.log
 Abc/
+BDI.txt
+*.Rout
+infile.txt
+*.len

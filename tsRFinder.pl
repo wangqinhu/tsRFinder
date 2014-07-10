@@ -29,10 +29,6 @@ my %config;
 #  Main
 #-------------------------------------------------------------------------------
 
-if ( @ARGV < 2 ) {
-	usage();
-}
-
 init();
 
 # Global variables
@@ -41,8 +37,13 @@ my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
 my $srna     = $option{s} || $config{"sRNA"};
 my $adaptor  = $option{a} || $config{"adaptor"};
-my $minrl    = $option{n} || $config{"min_read_length"};
-my $maxrl    = $option{x} || $config{"max_read_length"};
+my $minrl    = $option{n} || $config{"min_read_length"} || 18;
+my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
+my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
+
+# run/debug and control
+my $mode     = $option{m} || "run";
+my $usr_trna  = undef;
 
 find_tsRNA();
 
@@ -57,18 +58,19 @@ sub find_tsRNA {
 
 	# Create the output directory
 	if ( $label ~~ ["demo", "lib", "doc"] ) {
-		print "Your label setting conflict with tsRFinder directoy, please change another lable!\n";
+		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
+		print "Label demo, lib and doc are not allowed!\n";
 		exit;
 	}
 	if ( -e "$tsR_dir/$label" ) {
-		print "$label exist, Remove it? [N/y] ";
+		print "$label exist, remove it? [N/y] ";
 		my $answer = <>;
 		chomp $answer;
 		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
 			print_log("directory $label will be removed now!");
 			system("rm -rf $tsR_dir/$label");
 		} else {
-			print_log("Exit: because $label exists");
+			print_log("Exit: directory $label exists");
 			exit;
 		}
 	}
@@ -89,10 +91,10 @@ sub find_tsRNA {
 	# sRNA/tRNA distribution
 	draw_distribution();
 
-	# cleavage position
+	# Cleavage position
 	find_cleavage_site();
 
-	# family
+	# Family
 	srna_family("$tsR_dir/$label/tsRNA.seq");
 
 	# Write report file
@@ -104,9 +106,9 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("c:l:g:t:s:a:n:hv", \%option);
+	getopts("c:l:g:t:s:a:n:f:m:hv", \%option) or die "$!\n" . usage();
 
-
+	# Check arguments
 	if ($option{h}) {
 		usage();
 	}
@@ -115,18 +117,29 @@ sub init {
 		version();
 	}
 
+	if (!defined($tsR_dir)) {
+		print "Exit: environment tsR_dir is not correctly set up!\n";
+		print "Check doc/manual.pdf to see how to do this.\n";
+		exit;
+	}
+
 	start_log();
 
 	my $config_file = $option{c};
 
 	# Configs
 	if ( $config_file ) {
-		print_log("Parsing configuration file $config_file");
-		my $cfg = new Config::Simple("$config_file");
-		%config = $cfg->vars();
+		if ( -e $config_file ) {
+			print_log("Parsing configuration file $config_file");
+			my $cfg = new Config::Simple("$config_file");
+			%config = $cfg->vars();
+		} else {
+			print_log("Configuration file $config_file does not exist!");
+			exit;
+		}
 	} else {
-		print_log("No configuration file specified, using default tsR.conf");
-		my $cfg = new Config::Simple("$tsR_dir/tsR.conf");
+		print_log("No configuration file is specified, using $tsR_dir/demo/tsR.conf");
+		my $cfg = new Config::Simple("$tsR_dir/demo/tsR.conf");
 		%config = $cfg->vars();
 	}
 
@@ -136,7 +149,9 @@ sub init {
 sub stop {
 
 	stop_log();
-	clean_data();
+	if ($mode ne "debug") {
+		clean_data();
+	}
 	print "Finshed!\n";
 	exit;
 
@@ -148,7 +163,9 @@ sub clean_data {
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
-	system("rm $label/trna.ss");
+	unless ($usr_trna) {
+		system("rm $label/trna.ss");
+	}
 	system("rm $label/tRNA.fas");
 	system("rm *.Rout");
 	system("rm BDI.txt infile.txt");
@@ -164,7 +181,7 @@ sub tRNA_scan {
 		if ( -e $refseq ) {
 			predict_tRNA();
 		} else {
-			print_log("Exit with error: No reference genome specified");
+			print_log("Exit: No reference genome specified");
 			exit;
 		}
 	} else {
@@ -172,6 +189,7 @@ sub tRNA_scan {
 		my $status = check_valid_tRNA($trna);
 		if ($status == 1) {
 			print_log("The tRNA file supplied is valid");
+			$usr_trna = 1;
 		} else {
 			print_log("The tRNA file supplied is NOT valid");
 			exit;
@@ -200,8 +218,10 @@ sub check_valid_tRNA {
 			if (/[^ATCGatcg]+/) {
 				my $str = <FILE>;
 				# Third, have structure information
-				if (/[^\(\.\)]+/) {
-					return 1;  # valid
+				# Please do NOT use ">" for matching becuase all fasta file have it
+				if ($str =~ /[\<|\)]+/) {
+					format_tRNA($trna);
+					return 1;  # valid;
 				} else {
 					return 0;  # non-valid
 				}
@@ -212,6 +232,38 @@ sub check_valid_tRNA {
 			return 0;          # non-valid
 		}
 	}
+
+}
+
+# Format tRNA SS file if a valid tRNA file is supplied
+sub format_tRNA {
+
+	my ($file) = @_;
+
+	unless ( -e $file ) {
+		print_log("file $file does not exist!");
+		exit;
+	}
+
+	print_log("Formating tRNA ...");
+	open (IN, "$file") or die "Cannot open file $file: $!\n";
+	open (TSQ, ">$tsR_dir/$label/tRNA.fa") or die "Cannot create file tRNA.fa: $!\n";
+	open (TSS, ">$tsR_dir/$label/tRNA.fas") or die "Cannot create file tRNA.fas: $!\n";
+	while (<IN>) {
+		if (/\(+/) {
+			s/\(/\>/g;
+			s/\)/\</g;
+			print TSS $_;
+		} elsif (/\<+/) {
+			print TSS $_;
+		} else {
+			print TSQ $_;
+			print TSS $_;
+		}
+	}
+	close TSQ;
+	close TSS;
+	close IN;
 
 }
 
@@ -308,7 +360,7 @@ sub unique_tRNA {
 
 	# Generate summary file without redundancy
 	my %count = ();
-	print_log("Count of unique tRNAs for each unique triplet");
+	print_log("The number of unique triplet:");
 	my %once = ();
 	my $trna_file = "_trna.sq"; 
 	
@@ -1083,6 +1135,10 @@ sub stat_index {
 	my $spe = mean(@spe);
 	my $acc = mean(@acc);
 
+	$sen = format_percent($sen,4);
+	$spe = format_percent($spe,4);
+	$acc = format_percent($acc,4);
+
 	print_log("stat. by BDI :");
 	print_log(" Sensitivity : $sen");
 	print_log(" Specificity : $spe");
@@ -1090,6 +1146,21 @@ sub stat_index {
 
 }
 
+# Format stat index
+sub format_percent {
+
+	my($num, $dig) = @_;
+	my $percent = undef;
+
+	if ( $num > 0 ) {
+		$percent = 	int($num * 10**$dig + 0.5 ) / 10**$dig;
+	} else {
+		$percent = 	int($num * 10**$dig - 0.4 ) / 10**$dig;
+	}
+
+	return $percent;
+
+}
 # Math: mean
 sub mean {
 
@@ -1305,6 +1376,14 @@ sub cleavage_pattern {
 sub srna_family {
 
 	my ($file) = @_;
+	my @nwalign = ("nwalign", "nwalign_linux32", "nwalign_linux64");
+	my $nwalign = $nwalign[ os_index() ];
+
+	# Family threshold is specified by user, with a default value of 72
+	# Although it can be lower, but we strongly recommend you to use a higher value, such as 100.
+	# The family threshlod value can be estimated:
+	# Score = 4 X Number of matches
+	$fam_thr =~ s/\s//g;
 
 	print_log("Classing sRNA ...");
 
@@ -1340,8 +1419,8 @@ sub srna_family {
 			for (my $j = $i+1; $j < @ids; $j++ ) {
 				my $id2 = $ids[$j];
 				my $id = $id1 . "\t" . $ids[$j];
-				$pairwise{$id}= `$tsR_dir/lib/nwalign -s -a $seq{$id1} -b $seq{$id2}`;
-				if ($pairwise{$id} > 65) {
+				$pairwise{$id}= `$tsR_dir/lib/$nwalign -s -a $seq{$id1} -b $seq{$id2}`;
+				if ($pairwise{$id} > $fam_thr) {
 					$class{$id2} = 1;
 					$fam[$fam_index] .= "\t$id2";
 				}
@@ -1365,6 +1444,32 @@ sub by_len {
 
 	length($a) <=> length($b);
 
+}
+
+# Dectect Operating System
+sub os_index {
+
+	my $os = $^O;
+	my $index = undef;
+
+	if($os  eq  "darwin") {
+		$index = 0;
+	} elsif($os  eq  "linux") {
+		my $bit=`getconf LONG_BIT`;
+		chomp $bit;
+		if ($bit eq "32") {
+			$index = 1;
+		} elsif ($bit eq "64")  {
+			$index = 2;
+		} else {
+			die "Unknown CPU!\n";
+		}
+	} elsif($os  eq  "MSWin32") {
+		die "tsRFinder does not support Windows!\n";
+	} else {
+		die "Unknown Operating System!\n";
+	}
+	return $index;
 }
 
 # usage
