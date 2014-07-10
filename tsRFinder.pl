@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.4';
+my $version = '0.5';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
