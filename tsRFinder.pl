@@ -231,10 +231,6 @@ sub check_valid_tRNA {
 
 	open (FILE, "$file") or die "Cannot open file $file: $!\n";
 
-	unless ( -e $file ) {
-		print_log("tRNA file $file does not exit!")
-	}
-
 	# A typical tRNA file should contain at least three lines:
 	while (<FILE>) {
 		# First, begin with ">" and followed by accession number
@@ -395,7 +391,6 @@ sub unique_tRNA {
 	# Generate summary file without redundancy
 	my %count = ();
 	print_log("The number of unique triplet:");
-	my %once = ();
 	my $trna_file = "_trna.sq"; 
 	
 	# Foreach triplet
@@ -404,7 +399,6 @@ sub unique_tRNA {
 		open (UNI, ">$label/_trna/$ac") or die "Cannot open file $ac: $!\n";
 		# For counting
 		$count{$ac} = 0;
-		$once{$ac} = 0;
 		# Read the tRNA file
 		open (TRNA, "$label/$trna_file") or die "Cannot open file $trna_file: $!\n";
 	    # Store the unique sequences
@@ -419,10 +413,6 @@ sub unique_tRNA {
 			my $str = <TRNA>;
 			# If the id, seq, and str belongs to the current triplet
 			if ($ac eq substr($id,3,3)) {
-				# count it
-				if ($once{$ac} == 0) {
-					$once{$ac} = 1;
-				}
 				# Use hash to remove redundancy
 				if (!exists $unique{$seq}) {
 					$unique{$seq} = 1;
@@ -433,9 +423,7 @@ sub unique_tRNA {
 				}
 			}
 		}
-		# Release control
-		$once{$ac} = 0;
-		
+
 		close TRNA;
 		close UNI;
 		print_log("$ac\t$count{$ac}");
@@ -701,7 +689,7 @@ sub map_srna {
 		if (/^>(\S+)/) {
 			$refid = $1;
 		} else {
-			s/\s//;
+			s/\s//g;
 			$refsize{$refid} += length ($_);
 		}
 	} 
@@ -748,7 +736,7 @@ sub map_srna {
 					} elsif ($map{$id}{"strand"} eq "-") {
 						$coordminus[$i] += $map{$id}{"num"};
 					} else {
-						print "Opps, Check!\n";
+						print "Opps, I do not recognize the map strand, check the map!\n";
 					}
 				}
 			}
@@ -803,7 +791,7 @@ sub define_tsRNA {
 		if (/^>(\S+)/) {
 			$refid = $1;
 		} else {
-			s/\s//;
+			s/\s//g;
 			$seq{$refid} = $_;
 			$refsize{$refid} = length ($seq{$refid});
 			my $next = <REF>;
@@ -1161,7 +1149,7 @@ sub stat_index {
     my @acc = ();
 	my $i = 0;
 
-	foreach (keys $sm_hash) {
+	foreach (keys %$sm_hash) {
 		my $stat = $sm_hash->{$_};
 		my ($tp, $fn, $fp, $tn) = split /\t/, $stat;
 		$sen[$i] = sensitivity($tp, $fn);
@@ -1321,7 +1309,7 @@ sub find_cleavage_site {
 
 	open (CLVG, ">$tsR_dir/$label/cleavage.txt");
 	print CLVG "tRNA\ttsR5\ttsR3\n";
-	foreach (keys $cp_hash) {
+	foreach (keys %$cp_hash) {
 		print CLVG $_, "\t", $cp_hash->{$_},"\n";
 	}
 	close CLVG;
@@ -1471,7 +1459,7 @@ sub srna_family {
 	}
 
 	open (CLS, ">$tsR_dir/$label/tsRNA.fam") or die "Cannot open file tsRNA.fam: $!\n";
-	foreach (reverse sort by_len values @fam) {
+	foreach (reverse sort by_len @fam) {
 		print CLS $_, "\n";
 	}
 	close CLS;
