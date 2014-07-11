@@ -29,9 +29,13 @@ my %config;
 #  Main
 #-------------------------------------------------------------------------------
 
+# run/debug and control
+our $mode      =  "run";
+
 init();
 
 # Global variables
+   $mode     = $option{m} || "run";
 my $label    = $option{l} || $config{"label"};
 my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
@@ -40,10 +44,7 @@ my $adaptor  = $option{a} || $config{"adaptor"};
 my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
-
-# run/debug and control
-my $mode     = $option{m} || "run";
-my $usr_trna  = undef;
+my $usr_trna = undef;
 
 find_tsRNA();
 
@@ -62,6 +63,8 @@ sub find_tsRNA {
 		print "Label demo, lib and doc are not allowed!\n";
 		exit;
 	}
+	chomp $tsR_dir;
+	$tsR_dir =~ s/\/$//;    # replace extra "/" someone may include in the enviroment
 	if ( -e "$tsR_dir/$label" ) {
 		print "$label exist, remove it? [N/y] ";
 		my $answer = <>;
@@ -117,9 +120,14 @@ sub init {
 		version();
 	}
 
+	# Check enviroment
 	if (!defined($tsR_dir)) {
 		print "Exit: environment tsR_dir is not correctly set up!\n";
 		print "Check doc/manual.pdf to see how to do this.\n";
+		exit;
+	}
+	unless ( -d $tsR_dir ) {
+		print "Exit: environment tsR_dir is set, but the directory is not exist!\n";
 		exit;
 	}
 
@@ -148,6 +156,17 @@ sub init {
 	check_install("bowtie");
 	check_install("R");
 
+	# Indicating modes
+	if ($mode eq "debug") {
+		print_log("Running in debug mode");
+	} else {
+		if ($mode eq "run") {
+			print_log("tsRFinder init success!");
+		} else {
+			die "Unknown  mode: $mode!\n";
+		}
+	}
+
 }
 
 # Stop tsRFinder
@@ -156,6 +175,8 @@ sub stop {
 	stop_log();
 	if ($mode ne "debug") {
 		clean_data();
+	} else {
+		print_log("Attention: you are in debug mode, temp file were keeped!");
 	}
 	print "Finshed!\n";
 	exit;
@@ -293,9 +314,15 @@ sub run_tRNAscanSE {
 
 	print_log("Predicting tRNA ...");
 
-	check_install("tRNAscan-SE");
-
-	system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
+	if ( check_install("tRNAscan-SE") ) {
+		my $correct_install = `tRNAscan-SE --version 2>&1`;
+		if ($correct_install !~ /^Option/) {
+			print_log("tRNAscan-SE not correctly installed, such as PERL5LIB not set.");
+			exit;
+		} else {
+			system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
+		}
+	}
 
 }
 
@@ -1467,14 +1494,15 @@ sub os_index {
 	if($os  eq  "darwin") {
 		$index = 0;
 	} elsif($os  eq  "linux") {
-		my $bit=`getconf LONG_BIT`;
-		chomp $bit;
-		if ($bit eq "32") {
-			$index = 1;
-		} elsif ($bit eq "64")  {
+		# my $bit=`getconf LONG_BIT`;
+		# chomp $bit;
+		# some libs used by getconf may not correctly installed
+		# use uname instead
+		my $bit = `uname -m`;
+		if ($bit =~ "64") {
 			$index = 2;
 		} else {
-			die "Unknown CPU!\n";
+			$index = 1;
 		}
 	} elsif($os  eq  "MSWin32") {
 		die "tsRFinder does not support Windows!\n";
@@ -1495,6 +1523,8 @@ sub check_install {
 	if (!defined($w[-1]) or $w[-1] ne "$app") {
 		print_log("\n\n\nWARNING:\n$app IS NOT INSTALLED!!\n\n\n");
 		exit;
+	} else {
+		return "1";
 	}
 }
 
