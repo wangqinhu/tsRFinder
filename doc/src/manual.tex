@@ -56,11 +56,11 @@ git clone https://github.com/wangqinhu/tsRFinder.git
 in the terminal. Alternatively, you can download it from
 
 {\small \begin{verbatim}
-https://codeload.github.com/wangqinhu/tsRFinder/zip/master
+https://github.com/wangqinhu/tsRFinder/releases/latest
 \end{verbatim}
 }
 
-and then unzip master file.
+and then decompress the zip file or the tarball.
 
 When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment setting. For example, if tsRFinder is placed in /your/path/of/tsRFinder, then type the following in the terminal if you are using bash.
 
@@ -96,8 +96,10 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  Min read length
-    -x  Max read length
+    -n  Min read length            [defalut 18]
+    -x  Max read length            [default 45]
+    -f  Small RNA family threshold [default 72]
+    -w  tRNA with/without label    [defualt no]
     -h  Help
     -v  Version
 
@@ -137,6 +139,12 @@ To have a quick but rough overview that how tsRFinder looks like, see the the an
 tsRFinder allowes you specify your inputs via a separate configuration file, for example, here is the content of our demo tsR.conf:
 
 \begin{verbatim}
+#===================================#
+#                                   #
+#    Configuration for tsRFinder    #
+#                                   #
+#===================================#
+
 label               :  Abc
 reference_genome    :  demo/genome.fa 
 reference_tRNA      :
@@ -144,9 +152,11 @@ sRNA                :  demo/sRNA.fq
 adaptor             :  TGGAATTCTCGGGTGCCAAGG
 min_read_length     :  18
 max_read_length     :  45
+family_threshold    :  72
+tRNA_with_label     :  no
 \end{verbatim}
 
-Currently we have 8 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least. If you are using a raw sequence data, please also input the adaptor sequence (\emph{-a}). If you are not using a reference tRNA (\emph{-t}) prepared by yourself, leave this argument to EMPTY please.
+Currently we have 9 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least. If you are using a raw sequence data, please also input the adaptor sequence (\emph{-a}). If you are not using a reference tRNA (\emph{-t}) prepared by yourself, leave this argument to EMPTY please.
 
 Once your configuration file is well prepared, typing the following in the terminal to run tsRFinder. In this demo, the configuration file (\emph{-c}) is at demo/tsR.conf, so we write like this:
 

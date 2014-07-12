@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.5';
+my $version = '0.6';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -44,6 +44,7 @@ my $adaptor  = $option{a} || $config{"adaptor"};
 my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
+my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $usr_trna = undef;
 
 find_tsRNA();
@@ -109,7 +110,7 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("c:l:g:t:s:a:n:f:m:hv", \%option) or die "$!\n" . usage();
+	getopts("c:l:g:t:s:a:n:x:f:w:hv", \%option) or die "$!\n" . usage();
 
 	# Check arguments
 	if ($option{h}) {
@@ -445,7 +446,11 @@ sub unique_tRNA {
 					$unique{$seq} = 1;
 					$count{$ac}++;
 					$idi++;
-					print UNI ">", $label, "tRNA-", $id, $idi, "\n", $seq;
+					print UNI ">";
+					if ($lab_trna eq "yes") {
+						print UNI $label;
+					}
+					print UNI "tRNA-", $id, $idi, "\n", $seq;
 					print UNI "$str";
 				}
 			}
@@ -1558,8 +1563,10 @@ tsRFinder usage:
     -t  Reference tRNA sequence
     -s  Small RNA sequence
     -a  Adaptor sequence
-    -n  Min read length
-    -x  Max read length
+    -n  Min read length            [defalut 18]
+    -x  Max read length            [default 45]
+    -f  Small RNA family threshold [default 72]
+    -w  tRNA with/without label    [defualt no]
     -h  Help
     -v  Version
 
