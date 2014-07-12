@@ -70,7 +70,7 @@ sub find_tsRNA {
 		my $answer = <>;
 		chomp $answer;
 		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
-			print_log("directory $label will be removed now!");
+			print_log("Directory $label will be removed now!");
 			system("rm -rf $tsR_dir/$label");
 		} else {
 			print_log("Exit: directory $label exists");
@@ -131,7 +131,32 @@ sub init {
 		exit;
 	}
 
-	start_log();
+	# Check inputs
+	if ( defined($option{c}) ) {
+		start_log();
+	} else {
+		if ( defined($option{s}) ) {
+			if ( defined($option{t}) or defined($option{g})) {
+				if ( defined($option{l}) ) {
+					if ( defined($option{a}) ) {
+						start_log();
+					} else {
+						print "No adaptor sequence specified!";
+						usage();
+					}
+				} else {
+					print "No label of this analysis specified!\n";
+					usage();
+				}
+			} else {
+				print "No reference tRNA or genome sequence specified!\n";
+				usage();
+			}
+		} else {
+			print "No sRNA file specified!\n";
+			usage();
+		}
+	}
 
 	my $config_file = $option{c};
 
@@ -146,9 +171,11 @@ sub init {
 			exit;
 		}
 	} else {
-		print_log("No configuration file is specified, using $tsR_dir/demo/tsR.conf");
-		my $cfg = new Config::Simple("$tsR_dir/demo/tsR.conf");
-		%config = $cfg->vars();
+		if ($mode eq "debug") {
+			print_log("No configuration file is specified, using $tsR_dir/demo/tsR.conf");
+			my $cfg = new Config::Simple("$tsR_dir/demo/tsR.conf");
+			%config = $cfg->vars();
+		}
 	}
 
 	# Check critical dependency
@@ -158,7 +185,7 @@ sub init {
 
 	# Indicating modes
 	if ($mode eq "debug") {
-		print_log("Running in debug mode");
+		print_log("tsRFinder init success: Running in debug mode");
 	} else {
 		if ($mode eq "run") {
 			print_log("tsRFinder init success!");
@@ -202,12 +229,12 @@ sub clean_data {
 # Fetech tRNA from genome sequence or user input
 sub tRNA_scan {
 
-	unless ( -e $trna ) {
+	unless (  defined($trna) ) {
 	    print_log("No reference tRNA supplied, predicting by tRNAscan-SE");
 		if ( -e $refseq ) {
 			predict_tRNA();
 		} else {
-			print_log("Exit: No reference genome specified");
+			print_log("Exit: No reference genome specified, how did you get here?");
 			exit;
 		}
 	} else {
@@ -1505,7 +1532,7 @@ sub check_install {
 
 	my ($app) = @_;
 
-	my $which = `which $app`;
+	my $which = `which $app 2>&1`;
 	chomp $which;
 	my @w = split /\//, $which;
 	if (!defined($w[-1]) or $w[-1] ne "$app") {

@@ -24,7 +24,7 @@
 
 \section{Introduction}
 
-Small RNAs are key regulators of gene expression, such as miRNA, siRNA, and piRNA. The tRNA-derived small RNA (tsRNA; also tRNA-derived RNA fragments, tRF), is a class of novel small RNA have been identified recently. However, there is no public tool available for tsRNA prediction yet. We thus developed tsRFinder for tsRNA prediction. It takes the raw data of small RNA sequencing reads and the reference genome sequence, and identify tsRNA with additional sequence and statistical analysis for you automatically.
+Small RNAs are key regulators of gene expression, such as miRNA, siRNA, and piRNA. The tRNA-derived small RNA (tsRNA; also tRNA-derived RNA fragments, tRF), is a class of novel small RNA have been identified recently. However, there is no public tool available for tsRNA prediction yet. We thus developed tsRFinder for tsRNA prediction. It takes the raw data of small RNA sequencing reads and the reference genome sequence, and identifies tsRNA with additional sequence and statistical analysis for you automatically.
 
 \section{How to install}
 
@@ -34,10 +34,11 @@ tsRFinder depends on the following programmes, please check and install them \fo
 
 \begin{itemize}
 
-\item Perl, greater than v5.16.2, required, for tsRFinder.pl execution. And it is always installed already in most of the UNIX-like operating systems.
-\item tRNAscan-SE, greater than v1.3.1, required, for tRNA prediction. \\http://lowelab.ucsc.edu/tRNAscan-SE
+\item Perl, greater than v5.10.1, required, for tsRFinder.pl execution. And it is always installed already in most of the UNIX-like operating systems.
+Two perl modules, Config::Simple and Getopt::Std (always build-in) are need to install if you havn't.
 \item bowtie, greater than v1.0.0, required, for small RNA mapping. \\https://github.com/BenLangmead/bowtie
 \item R, greater than v2.15.2, required, for small RNA data analysis and illustration. \\http://www.r-project.org
+\item tRNAscan-SE, greater than v1.3.1, optional if you want to prepare tRNA input yourself, for tRNA prediction. \\http://lowelab.ucsc.edu/tRNAscan-SE
 \item fastx\_toolkit, greater than v0.0.14, optional if you have already processed the raw sequencing data yourself. \\https://github.com/agordon/fastx\_toolkit
 
 \end{itemize}
@@ -61,7 +62,7 @@ https://codeload.github.com/wangqinhu/tsRFinder/zip/master
 
 and then unzip master file.
 
-When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment. For example, if tsRFinder is placed in /your/path/of/tsRFinder, then type the following in the terminal if you are using bash.
+When tsRFinder is cloned or unpacked, move the entire directory to an proper place and add the tsRFinder path to the environment setting. For example, if tsRFinder is placed in /your/path/of/tsRFinder, then type the following in the terminal if you are using bash.
 
 {\small \begin{verbatim}
 echo export tsR_dir="/your/path/of/tsRFinder" >> ~/.bashrc
@@ -76,7 +77,7 @@ And now, you can run tsRFinder for your dataset.
 
 Before running tsRFinder, you are asked to prepare/download the following two files: (1) the reference genome sequence, or the reference tRNA sequence and, (2) the small RNA reads.
 
-We strongly recommend you using the reference genome sequence and the raw small RNA sequencing data, since tsRFinder can help you prepare the reference tRNA data and clean small RNA data automatically. If you want to prepare the tRNA file and small RNA reads file by yourself, you can run the demo data (using debug mode: \emph{-m debug}) and find out which exact format of tRNA reference and small RNA reads file can be accepted instead, this is allowed but not encouraged.
+We strongly recommend you using the reference genome sequence and the raw small RNA sequencing data, since tsRFinder can help you prepare the reference tRNA data and clean small RNA data automatically. If you want to prepare the tRNA file and small RNA reads file by yourself, you can run the demo data (enable debug mode in command line option: \emph{-m debug}) and find out which exact format of tRNA reference and small RNA reads file can be accepted instead, this is allowed but not encouraged. You can also found the format description in the FAQ part of this document.
 
 \subsection{Running the pipeline}
 
@@ -107,9 +108,11 @@ Example:
 
 \section{Demo}
 
+To have a quick but rough overview that how tsRFinder looks like, see the the animated gif demo in doc/demo.gif or online.
+
 \subsection{Demo data}
 
-\textbf{Demo refseq}: we used serval random sequences embedded with some real tRNAs as pseudo reference genome sequence. This small sequence data in fasta format can be accessed in the file "tsRFinder/demo/genome.fa". In your analysis, if you have a reference genome, just replace it with the reference sequence; if you don't have reference genome sequence, you can use the reference tRNA sequence instead. Figure \ref{refseq} shows what a refseq file look like.
+\textbf{Demo refseq}: we used serval random sequences embedded with some real tRNAs as pseudo reference genome sequence. This small sequence data in FASTA format can be accessed in the file "tsRFinder/demo/genome.fa". In your analysis, if you have a reference genome, just replace it with the reference sequence; if you don't have reference genome sequence, you can use the reference tRNA sequence instead. Figure \ref{refseq} shows what a refseq file looks like.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -131,21 +134,21 @@ Example:
 
 \subsection{Demo running}
 
-tsRFinder allowes you specify your inputs via a separate configuration file, for example, here is the content our demo tsR.conf:
+tsRFinder allowes you specify your inputs via a separate configuration file, for example, here is the content of our demo tsR.conf:
 
 \begin{verbatim}
 label               :  Abc
 reference_genome    :  demo/genome.fa 
-reference_tRNA      :  NA
+reference_tRNA      :
 sRNA                :  demo/sRNA.fq
 adaptor             :  TGGAATTCTCGGGTGCCAAGG
 min_read_length     :  18
 max_read_length     :  45
 \end{verbatim}
 
-Currently we have 8 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}); the paths of reference genome and small RNA should be also supplied at least. If you are using a raw sequence data, please also input the adaptor sequence, and the shortest read you want to keep. If you are not using a reference tRNA prepared by yourself, leave this argument to "NA" please.
+Currently we have 8 arguments used for filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least. If you are using a raw sequence data, please also input the adaptor sequence (\emph{-a}). If you are not using a reference tRNA (\emph{-t}) prepared by yourself, leave this argument to EMPTY please.
 
-Once your configuration file is well prepared, typing the following in the terminal to run tsRFinder. In this demo, the configuration file is at demo/tsR.conf, so we write like this:
+Once your configuration file is well prepared, typing the following in the terminal to run tsRFinder. In this demo, the configuration file (\emph{-c}) is at demo/tsR.conf, so we write like this:
 
 \begin{verbatim}
 # We have set "tsR_dir" as an environment variable before
@@ -155,7 +158,7 @@ cd tsR_dir
 
 \subsection{Demo output}
 
-By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), the text map (tmap) of small RNA mapped to tRNA, tsRNA family, the graphics showing the expression evaluated by small RNA data, also the cleavage site. Additional, tsRFinder supplies a figure showing the small RNA and tRNA reads length distribution (Figure \ref{distribution}) for you.
+By default, tsRFinder will give you a summary of which files have been outputted and some basic statistic. The predicted or user inputed tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequence were listed. Meanwhile, tsRFinder gives you additional summary on tRNA/tsRNA expression (including 5' tsRNA and 3' tsRNA), text map (tmap) of small RNA mapped to tRNA, tsRNA family, graphics showing the expression evaluated by small RNA data, and also the cleavage site. Additional, tsRFinder supplies a figure showing the small RNA and tRNA reads length distribution (Figure \ref{distribution}) for you.
 
 See our demo summary here:
 
@@ -211,7 +214,7 @@ stat. by BDI :
 
 \subsection{Visualization of tmap data}
 
-To examine the map the tsRNA, we developed a vim syntax plugin for visualization (Figure \ref{tmap}). If you want to enable color text map, copy lib/tmap.vim into your vim syntax folder, and put the following line into your .vimrc file:
+To examine the map of tsRNA, we developed a vim syntax plugin for visualization (Figure \ref{tmap}). If you want to enable color text map, copy lib/tmap.vim into your vim syntax folder, and put the following line into your .vimrc file:
 
 \begin{verbatim}
 au BufNewFile,BufRead *.tmap  setf tmap
@@ -241,11 +244,11 @@ No. tsRFinder used some build-in program of UNIX-like systems, for example, awk,
 
 \textbf{2. What's the length required for small RNA reads?}
 
-We recommend you sequencing from 15 - 50 nt for small RNA, however, 18 - 30 nt is OK if your tsRNA is less than 30 nt (such as tRF).
+We recommend you sequencing from 15 - 50 nt for small RNA, however, 18 - 30 nt is OK if your tsRNA is shorter than 30 nt (such as tRF).
 
 \textbf{3. What's the tRNA format required for input?}
 
-At first we encourage you using a reference genomic sequence to instead it, since tsRFinder will help you extract the tRNA sequence via tRNAscan-SE. And if you really want to use a file prepared yourself, please follow this format (see example): (1) the first line, begin with "$>$", followed by label "$Abc$", then which tRNA "$tRNA-ProCGG1$"; (2) the sequence of the tRNA; and (3), the secondary structure of tRNA, "$><$" and "$()$" both were acceptable.
+At first we encourage you using a reference genomic sequence to instead it, since tsRFinder will help you extract the tRNA sequence via tRNAscan-SE. And if you really want to use a file prepared yourself, please follow this format (see example): first line, begin with "$>$", followed by label "$Abc$", then which tRNA "$tRNA-ProCGG1$";  second line, the sequence of the tRNA; and third line, the secondary structure of tRNA, "$><$" and "$()$" both were acceptable.
 
 {\scriptsize \begin{verbatim}
 tRNA example:
@@ -256,7 +259,7 @@ GGCCTCGTGGTCTAGTGGTATGATTCTCGCTTCGGGTGCGAGAGGtCCCGGGTTCGATTCCCGGTGAGGCCC
 
 \textbf{4. What's the sRNA format required for input?}
 
-We recommend you using a raw data. To have an sRNA file for input prepared yourself, please follow this format (see example): (1) the first line, begin with "$>$", then the label "$Abc$", then the 7\-bit index, followed by "$\_$" (or "$|$", "$-$" and white space) and the read number; (2) the sequence of the read.
+We recommend you using a raw data. To have an sRNA file for input prepared yourself, please follow this format (see example): first line, begin with "$>$", then the label "$Abc$", then the 7\-bit index, followed by "$\_$" (or "$|$", "$-$" and white space) and the read number; second line, the sequence of the read.
 
 {\scriptsize \begin{verbatim}
 sRNA example:
@@ -269,7 +272,7 @@ AGGTGGTCAGGTAGAGAATACCAAGGCGCT
 
 \textbf{5. I have problem in installing tsRFinder and/or the dependencies, where to get more help?}
 
-You can create new issue for tsRFinder repository on GitHub. The URL is https://github.com/wangqinhu/tsRFinder/issues/new
+You can go to the offical support website or create new issue for tsRFinder repository on GitHub. The URL is https://github.com/wangqinhu/tsRFinder/issues/new
 
 \textbf{6. Where to report bugs?}
 
@@ -281,6 +284,6 @@ Yes. tsRFinder is free, open source software, see the MIT license.
 
 \textbf{8. The 'nwalign' is not suit for my operating system, what can I do?}
 
-tsRFinder using Needleman-Wunsch algorithorim nwalign for small RNA alignment, we pre-build the binaries for some of the recently OS X / Linux, if you find it not suitable for your system or want to complile it by your self, goto lib/src directory and type 'make' to build \footnote{gcc is required.} it.
+tsRFinder using Needleman-Wunsch algorithorim nwalign for small RNA alignment, we pre-build the binaries for some of the recently OS X / Linux, if you find it not suitable for your system or want to complile it by your self, goto lib/src directory and type 'make' to build \footnote{The gcc compiler is required.} it.
 
 \end{document}
