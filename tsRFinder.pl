@@ -29,13 +29,10 @@ my %config;
 #  Main
 #-------------------------------------------------------------------------------
 
-# run/debug and control
-our $mode      =  "run";
-
 init();
 
 # Global variables
-   $mode     = $option{m} || "run";
+my $mode     = $option{m} || $config{"mode"} || "run";
 my $label    = $option{l} || $config{"label"};
 my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
@@ -45,7 +42,6 @@ my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
-my $usr_trna = undef;
 
 find_tsRNA();
 
@@ -58,36 +54,17 @@ stop();
 # A protocol to tsRNA prediction
 sub find_tsRNA {
 
-	# Create the output directory
-	if ( $label ~~ ["demo", "lib", "doc"] ) {
-		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
-		print "Label demo, lib and doc are not allowed!\n";
-		exit;
-	}
-	chomp $tsR_dir;
-	$tsR_dir =~ s/\/$//;    # replace extra "/" someone may include in the enviroment
-	if ( -e "$tsR_dir/$label" ) {
-		print "$label exist, remove it? [N/y] ";
-		my $answer = <>;
-		chomp $answer;
-		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
-			print_log("Directory $label will be removed now!");
-			system("rm -rf $tsR_dir/$label");
-		} else {
-			print_log("Exit: directory $label exists");
-			exit;
-		}
-	}
-	system("mkdir $label");
+	# Create output directory
+	create_directory();
 	
 	# Build reference tRNA dataset
 	tRNA_scan();
 
 	# Processing the raw sequencing data
-	format_reads($srna);
+	format_reads();
 
 	# Mapping
-	map_srna("$tsR_dir/$label/tRNA.fa", "$tsR_dir/$label/sRNA.fa");
+	map_srna();
 
 	# tsRNA identification
 	define_tsRNA();
@@ -99,7 +76,7 @@ sub find_tsRNA {
 	find_cleavage_site();
 
 	# Family
-	srna_family("$tsR_dir/$label/tsRNA.seq");
+	srna_family();
 
 	# Write report file
 	write_report();
@@ -110,13 +87,19 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("c:l:g:t:s:a:n:x:f:w:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:f:w:hv", \%option) or die "$!\n" . usage();
 
-	# Check arguments
+	# Defualt mode: run
+	unless ($option{m}) {
+		$option{m} = "run";
+	}
+
+	# Check help
 	if ($option{h}) {
 		usage();
 	}
 
+	# Check version
 	if ($option{v}) {
 		version();
 	}
@@ -127,6 +110,8 @@ sub init {
 		print "Check doc/manual.pdf to see how to do this.\n";
 		exit;
 	}
+	chomp $tsR_dir;
+	$tsR_dir =~ s/\/$//;    # replace extra "/" someone may include in the enviroment
 	unless ( -d $tsR_dir ) {
 		print "Exit: environment tsR_dir is set, but the directory is not exist!\n";
 		exit;
@@ -159,9 +144,8 @@ sub init {
 		}
 	}
 
+	# Check configs
 	my $config_file = $option{c};
-
-	# Configs
 	if ( $config_file ) {
 		if ( -e $config_file ) {
 			print_log("Parsing configuration file $config_file");
@@ -171,12 +155,6 @@ sub init {
 			print_log("Configuration file $config_file does not exist!");
 			exit;
 		}
-	} else {
-		if ($mode eq "debug") {
-			print_log("No configuration file is specified, using $tsR_dir/demo/tsR.conf");
-			my $cfg = new Config::Simple("$tsR_dir/demo/tsR.conf");
-			%config = $cfg->vars();
-		}
 	}
 
 	# Check critical dependency
@@ -185,13 +163,13 @@ sub init {
 	check_install("R");
 
 	# Indicating modes
-	if ($mode eq "debug") {
+	if ($option{m} eq "debug") {
 		print_log("tsRFinder init success: Running in debug mode");
 	} else {
-		if ($mode eq "run") {
+		if ($option{m} eq "run") {
 			print_log("tsRFinder init success!");
 		} else {
-			die "Unknown  mode: $mode!\n";
+			die "Unknown  mode: $option{m}!\n";
 		}
 	}
 
@@ -217,7 +195,7 @@ sub clean_data {
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
-	unless ($usr_trna) {
+	unless ($trna) {
 		system("rm $label/trna.ss");
 	}
 	system("rm $label/tRNA.fas");
@@ -225,6 +203,29 @@ sub clean_data {
 	system("rm BDI.txt infile.txt");
 	system("rm *.len");
 
+}
+
+# Create the output directory
+sub create_directory {
+	if ( $label ~~ ["demo", "lib", "doc"] ) {
+		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
+		print "Label demo, lib and doc are not allowed!\n";
+		exit;
+	}
+
+	if ( -e "$tsR_dir/$label" ) {
+		print "$label exist, remove it? [N/y] ";
+		my $answer = <>;
+		chomp $answer;
+		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
+			print_log("Directory $label will be removed now!");
+			system("rm -rf $tsR_dir/$label");
+		} else {
+			print_log("Exit: directory $label exists");
+			exit;
+		}
+	}
+	system("mkdir $label");
 }
 
 # Fetech tRNA from genome sequence or user input
@@ -243,7 +244,6 @@ sub tRNA_scan {
 		my $status = check_valid_tRNA($trna);
 		if ($status == 1) {
 			print_log("The tRNA file supplied is valid");
-			$usr_trna = 1;
 		} else {
 			print_log("The tRNA file supplied is NOT valid");
 			exit;
@@ -471,7 +471,7 @@ sub unique_tRNA {
 # Format the input sRNA file to adapt tsRFinder
 sub format_reads {
 
-	my ( $file ) = @_;
+	my ( $file ) = ( $srna );
 
 	unless ( -e $file ) {
 		print_log("No such file: $file");
@@ -688,7 +688,8 @@ sub print_log {
 # sRNA mapping
 sub map_srna {
 
-	my ($refseq, $rnaseq) = @_;
+	my $refseq = "$tsR_dir/$label/tRNA.fa";
+	my $rnaseq = "$tsR_dir/$label/sRNA.fa";
 
 	# Directories and setting
 	my $dir = "$tsR_dir/$label/_srna_map";
@@ -1434,7 +1435,7 @@ sub cleavage_pattern {
 # Class tsRNA
 sub srna_family {
 
-	my ($file) = @_;
+	my $file = "$tsR_dir/$label/tsRNA.seq";
 	my @nwalign = ("nwalign", "nwalign_linux32", "nwalign_linux64");
 	my $nwalign = $nwalign[ os_index() ];
 
@@ -1567,6 +1568,7 @@ tsRFinder usage:
     -x  Max read length            [default 45]
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
+    -m  mode, run/debug            [defualt run]
     -h  Help
     -v  Version
 
@@ -1598,7 +1600,7 @@ exit;
 
 =head1 NAME
 
-  tsRFinder.pl - A tool for tsRNA analysis with NGS data
+  tsRFinder - A tool for tsRNA analysis with NGS data
 
 =head1 SYNOPSIS
 
@@ -1614,7 +1616,7 @@ exit;
   
 =head1 HOME
 
-  https//github.com/wangqinhu/tsRFinder
+  https://github.com/wangqinhu/tsRFinder
   
 =head1 LICENSE
 
