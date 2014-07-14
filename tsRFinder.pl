@@ -932,9 +932,13 @@ sub define_tsRNA {
 			} elsif ($map->{"start"} gt length($arm5)) {
 				push @map3, $map;
 			} else {
+				# loop reads not belong to tsRNA
 				next;
 			}
 		}
+
+		# Escape if no tsRNA reads found (loop reads only)
+		next if ( @map5 + @map3 < 1);
 
 		# Search 5' tsRNA
 		my @mature5 = sort by_tmap_num @map5;
