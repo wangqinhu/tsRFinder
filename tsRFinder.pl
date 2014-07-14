@@ -743,7 +743,8 @@ sub map_srna {
 		while (<MAP>) {
 			my ($id, $strand, $refid, $start, $read, $discard) = split /\t/, $_, 6;
 			my ($sid, $num) = split /_/, $id;
-			my $end = $start + length($read);
+			# bdi use 0 - index, so the end = len - 1
+			my $end = $start + length($read) - 1;
 			$cid = $refid;
 			$id = $sid . "|". $strand . "|" . $start;
 			$map{$id}{"strand"} = $strand;
@@ -870,6 +871,7 @@ sub define_tsRNA {
 			next if ($strand eq "-");
 			my ($sid, $num) = split /_/, $id;
 			my $len = length($read);
+			# used for calculation the right "*" or "-" length, no need to minus 1
 			my $end = $start + $len;
 			$map[$i++] = {	"start"	=> $start,
 							"end" 	=> $end,
