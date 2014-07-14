@@ -1417,6 +1417,10 @@ sub cleavage_pattern {
 			if ($seq1 =~ /(\*{0,20}[ATCGNatcgn]+)\*/) {
 				my $seq1_end = length($1);
 				$dac{$id} = $seq1_end - $anticodon_start;
+			# Note: if 5' tsRNA not found, seq1 belongs to 3' tsRNA
+			} else {
+				$dac{$id} = "NA";
+				$seq2 = $seq1;
 			}
 			# 3   Caculate 3' tsRNA (start) distance from anticodon (end)
 			if (defined($seq2) && $seq2 =~ /(^\*{20,})[ATCGNatcgn]+/) {
