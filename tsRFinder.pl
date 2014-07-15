@@ -75,6 +75,9 @@ sub find_tsRNA {
 	# Cleavage position
 	find_cleavage_site();
 
+	# Draw cleavage sites
+	draw_cleavage_site();
+
 	# Family
 	srna_family();
 
@@ -202,6 +205,7 @@ sub clean_data {
 	system("rm *.Rout");
 	system("rm BDI.txt infile.txt");
 	system("rm *.len");
+	system("rm tscs.*");
 
 }
 
@@ -1362,11 +1366,10 @@ sub find_cleavage_site {
 #                    |
 #                  -----
 # NNNNNNNNNNN--N-N-X-X-X-N-N-NNNNNNNNNNN
+#             -1 0 1 2 3 4 5   tRNA site
 #         >>.  . . . . . . < <
 #            |  | | | | | | |
-# 5' tsR    -2 -1 0 1 | | | |
-#                     | | | |
-#                    -1 0 1 2  3' tsR
+#           -2 -1 0 1 2 3 4 5  clevage site
 #
 # N - nucleotide
 # X - Anticodon nucleotide
@@ -1428,10 +1431,11 @@ sub cleavage_pattern {
 				$dac{$id} = "NA";
 				$seq2 = $seq1;
 			}
-			# 3   Caculate 3' tsRNA (start) distance from anticodon (end)
+			# To keep consistence, use the same index as used in 5' tsRNA
+			# 3   Caculate 3' tsRNA (start) distance from anticodon (start)
 			if (defined($seq2) && $seq2 =~ /(^\*{20,})[ATCGNatcgn]+/) {
 				my $seq2_start = length($1);
-				my $dac = $seq2_start - $anticodon_end;
+				my $dac = $seq2_start - $anticodon_end + 3;
 				$dac{$id} = $dac{$id} . "\t" . $dac;
 			} else {
 				$dac{$id} = $dac{$id} . "\t" . "NA";
@@ -1554,6 +1558,50 @@ sub os_index {
 		die "Unknown Operating System! Try to compile nwalign in $tsR_dir/lib/src yourself.\n";
 	}
 	return $index;
+
+}
+
+# Draw cleavage site of tRNA
+sub draw_cleavage_site {
+
+	open (IN, "$tsR_dir/$label/cleavage.txt") or die "Cannot open file $label/cleavage.txt: $!\n";
+
+	my %tsR5 = ();
+	my %tsR3 = ();
+
+	while (<IN>) {
+		chomp;
+		my @w = split /\t/;
+		if ($w[1] =~ /^(\-?\d+)$/) {
+			$tsR5{$1}++;
+		}
+		if ($w[2] =~ /^(\-?\d+)$/) {
+			$tsR3{$1}++;
+		}
+	}
+
+	open (TC5, ">tscs.5") or die "Cannot create file tscs.5: $!\n";
+	foreach (sort by_num keys %tsR5) {
+		print TC5 $_, "\t", $tsR5{$_}, "\n";
+	}
+	close TC5;
+
+	open (TC3, ">tscs.3") or die "Cannot create file tscs.3: $!\n";
+	foreach (sort by_num keys %tsR3) {
+		print TC3 $_, "\t", "-", $tsR3{$_}, "\n";
+	}
+	close TC3;
+
+	system("R CMD BATCH $tsR_dir/lib/draw_cleavage_site.r");# 1>/dev/null 2>&1");
+	system("mv cleavage_profile.pdf $label/");
+
+}
+
+# Sort by numbers
+sub by_num {
+
+	$a <=> $b;
+
 }
 
 # Check dependency

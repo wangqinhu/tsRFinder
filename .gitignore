@@ -6,3 +6,4 @@ BDI.txt
 *.Rout
 infile.txt
 *.len
+tscs.*
