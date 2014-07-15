@@ -111,7 +111,7 @@ sub init {
 		exit;
 	}
 	chomp $tsR_dir;
-	$tsR_dir =~ s/\/$//;    # replace extra "/" someone may include in the enviroment
+	$tsR_dir =~ s/\/\s{0,}$//;    # replace extra "/" (and spaces) someone may include in the enviroment
 	unless ( -d $tsR_dir ) {
 		print "Exit: environment tsR_dir is set, but the directory is not exist!\n";
 		exit;
@@ -135,7 +135,7 @@ sub init {
 					usage();
 				}
 			} else {
-				print "No reference tRNA or genome sequence specified!\n";
+				print "No reference tRNA or genome sequence file specified!\n";
 				usage();
 			}
 		} else {
@@ -182,7 +182,7 @@ sub stop {
 	if ($mode ne "debug") {
 		clean_data();
 	} else {
-		print_log("Attention: you are in debug mode, temp file were keeped!");
+		print_log("Attention: you are in debug mode, temporary files were keeped!");
 	}
 	print "Finshed!\n";
 	exit;
@@ -232,7 +232,7 @@ sub create_directory {
 sub tRNA_scan {
 
 	unless (  defined($trna) ) {
-	    print_log("No reference tRNA supplied, predicting by tRNAscan-SE");
+	    print_log("No reference tRNA supplied, predicting by tRNAscan-SE ...");
 		if ( -e $refseq ) {
 			predict_tRNA();
 		} else {
@@ -341,7 +341,7 @@ sub run_tRNAscanSE {
 	if ( check_install("tRNAscan-SE") ) {
 		my $correct_install = `tRNAscan-SE --version 2>&1`;
 		if ($correct_install !~ /^Option/) {
-			print_log("tRNAscan-SE not correctly installed, such as PERL5LIB not set.");
+			print_log("tRNAscan-SE is not correctly installed, e.g. PERL5LIB is not correctly set.");
 			exit;
 		} else {
 			system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
@@ -495,7 +495,7 @@ sub format_reads {
 		format_fasta("$srna", "$label/sRNA.fa");
 	# If not a fastq or fasta file
 	} else {
-		print_log("Exit with error: unkown filetype detected! $file ");
+		print_log("Exit: unkown filetype detected! $file ");
 		exit;
 	}
 
@@ -531,7 +531,7 @@ sub format_fasta {
 
 	# Typically, a fasta head carrying both id and num sections is required
 	unless ($head =~ /^\>(\S+)[\-|\||\_|\t|\s+](\d+)/) {
-		print_log("Unsupport format dectected, see the demo file or using your raw data instead");
+		print_log("Unsupport fasta format dectected, see the demo file or using your raw data instead");
 		exit;
 	}
 
@@ -835,7 +835,7 @@ sub define_tsRNA {
 	} 
 	close REF;
 
-	print_log("\tParse tRNA map ...");
+	print_log("\tParsing tRNA map ...");
 
 	# Parse tRNA map
 	my $dir_map = "$label/_srna_map/map";
@@ -1139,7 +1139,7 @@ sub read_stat {
 # Generate small RNA length distribution
 sub draw_distribution {
 
-	print_log("Drawing sRNA/tRNA distribution");
+	print_log("Drawing sRNA/tRNA distribution ...");
 	srna_len_stat("$tsR_dir/$label/sRNA.fa");
 	system("mv read.len srna.len");
 	srna_len_stat("$tsR_dir/$label/tRNA.read.fa");
