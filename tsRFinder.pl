@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.6';
+my $version = '0.7';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -1521,16 +1521,29 @@ sub os_index {
 
 	my $os = $^O;
 	my $index = undef;
+	# To deal with the ones who complile nwalign themselves
+	my $file = `file -b $tsR_dir/lib/nwalign`;
 
 	if($os  eq  "darwin") {
-		$index = 0;
+		# In OS X, check if nwalign had been compiled on a different system
+		if ($file =~ /^Mach/) {
+			$index = 0;
+		} else {
+			print_log("Incorrect nwalign detected:");
+			print_log("lib/nwalign: $file");
+			print_log("Goto $tsR_dir/lib/src and type make before running");
+		}
 	} elsif($os  eq  "linux") {
 		# my $bit=`getconf LONG_BIT`;
 		# chomp $bit;
 		# some libs used by getconf may not correctly installed
 		# use uname instead
 		my $bit = `uname -m`;
-		if ($bit =~ "64") {
+
+		# Unless nwalign is complied by user
+		unless ($file =~ /^Mach/ ) {
+			$index = 0;
+		} elsif ($bit =~ "64") {
 			$index = 2;
 		} else {
 			$index = 1;
@@ -1538,7 +1551,7 @@ sub os_index {
 	} elsif($os  eq  "MSWin32") {
 		die "tsRFinder does not support Windows!\n";
 	} else {
-		die "Unknown Operating System!\n";
+		die "Unknown Operating System! Try to compile nwalign in $tsR_dir/lib/src yourself.\n";
 	}
 	return $index;
 }
