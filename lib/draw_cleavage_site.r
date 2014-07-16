@@ -14,6 +14,7 @@ ybottom<-ymin-2
 ytop<-ymax+2
 
 pdf("cleavage_profile.pdf", 8, 4)
+par(mar=c(4,1,1,0))
 # plot area
 plot(c(xleft, xright), c(ybottom, ytop), type = "n",
      xlab = "tRNA base", ylab = "",
