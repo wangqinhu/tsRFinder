@@ -5,13 +5,23 @@ tsr3<-read.table("tscs.3")
 # min-max-range
 xmin<-min(tsr5$V1,tsr3$V1)
 xmax<-max(tsr5$V1,tsr3$V1)
-yu<-max(tsr5$V2)
-yd<-min(tsr3$V2)
+ymin<-min(tsr3$V2)
+ymax<-max(tsr5$V2)
 xr<-seq(xmin-1,xmax,1)
+xleft<-xmin-1
+xright<-xmax+1
+ybottom<-ymin-2
+ytop<-ymax+2
 
 pdf("cleavage_profile.pdf", 8, 4)
 # plot area
-plot(c(xmin, xmax), c(yd-5, yu+5), type = "n", xlab = "tRNA base", ylab = "Cleavage frequency", main="Distribution of tRNA clevage sites", axes=F)
+plot(c(xleft, xright), c(ybottom, ytop), type = "n",
+     xlab = "tRNA base", ylab = "",
+     main="Distribution of tRNA clevage sites",
+     axes=F
+     )
+axis(side=1, labels=T,  at = seq(xmin-1,xmax+1))
+mtext(side = 2, text = "Cleavage frequency", line = 0)
 
 # tRNA
 rect(xr, 0, xr+0.8, 1, col = 1, lwd = 0.5)
@@ -34,10 +44,10 @@ rect(tsr3$V1 - 0.4, -1, tsr3$V1 + 0.4, tsr3$V2 - 1,
 
 # define axis
 # +y
-i<-1:max(tsr5$V2)
-rect(xmin-1.4, 1+i , xmin-1.1, 1+i+1, col=topo.colors(max(tsr5$V2)), border = "white")
+i<-1:ymax
+rect(xleft, 1+i, xleft+0.4, 1+i+1, col=topo.colors(max(tsr5$V2)), border = "white")
 
 # -y
-j<-min(tsr3$V2):-1
-rect(xmin-1.4, j-1,    xmin-1.1, j, col=rev(cm.colors(max(-tsr3$V2))), border = "white")
+j<-ymin:-1
+rect(xleft, j-1, xleft+0.4, j, col=rev(cm.colors(max(-tsr3$V2))), border = "white")
 dev.off()

@@ -211,6 +211,7 @@ sub clean_data {
 
 # Create the output directory
 sub create_directory {
+
 	if ( $label ~~ ["demo", "lib", "doc"] ) {
 		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
 		print "Label demo, lib and doc are not allowed!\n";
@@ -230,6 +231,7 @@ sub create_directory {
 		}
 	}
 	system("mkdir $label");
+
 }
 
 # Fetech tRNA from genome sequence or user input
@@ -1028,6 +1030,7 @@ sub by_tmap {
 	or $b->{"num"} <=> $a->{"num"}
 	# if cannot sort, by sid
 	or $a->{"sid"} cmp $b->{"sid"}
+
 }
 
 # Sorting reads by abundance
@@ -1110,7 +1113,9 @@ sub write_report {
 	print_log("distribution : $tsR_dir/$label/distribution.pdf\n");
 
 	# tRNA cleavage site
-	print_log("    cleavage : $tsR_dir/$label/cleavage.txt\n");
+	print_log("    cleavage :");
+	print_log("      detail : $tsR_dir/$label/cleavage.txt");
+	print_log("     profile : $tsR_dir/$label/cleavage_profile.pdf\n");
 
 	# tRNA family
 	print_log("tsRNA family : $tsR_dir/$label/tsRNA.fam\n");
@@ -1444,6 +1449,7 @@ sub cleavage_pattern {
 	}
 
 	return \%dac;
+
 }
 
 # Class tsRNA
@@ -1564,6 +1570,8 @@ sub os_index {
 # Draw cleavage site of tRNA
 sub draw_cleavage_site {
 
+	print_log("Building cleavage profile ...");
+
 	open (IN, "$tsR_dir/$label/cleavage.txt") or die "Cannot open file $label/cleavage.txt: $!\n";
 
 	my %tsR5 = ();
@@ -1618,6 +1626,7 @@ sub check_install {
 	} else {
 		return "1";
 	}
+
 }
 
 # usage
