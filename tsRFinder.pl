@@ -20,7 +20,7 @@ use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.7';
+my $version = '0.8';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -494,7 +494,7 @@ sub format_reads {
 		# Build a clean sRNA reads from raw data
 		process_raw($file);
 		# Format fasta file required by tsRFinder
-		format_fasta("$label/_raw/srna.clcfa", "$label/sRNA.fa");
+		format_fasta("$label/_raw/sRNA.fa", "$label/sRNA.fa");
 	# For fasta format
 	} elsif ($file_type eq "fa") {
 		# Format fasta file required by tsRFinder
@@ -572,11 +572,6 @@ sub process_raw {
 
 	my ($file) = @_;
 
-	# Check fastx_tool kit
-	check_install("fastq_to_fasta");
-	check_install("fastx_clipper");
-	check_install("fastx_collapser");
-
 	unless ( -e $file) {
 		print_log("No such file: $file");
 		exit;
@@ -586,7 +581,7 @@ sub process_raw {
 
 	# fastq --> fasta
 	print_log("Converting fastq to fasta ...");
-	system("fastq_to_fasta -i $file -o $label/_raw/sRNA.fa -n -v -Q33");
+	fastq_to_fasta($file);
 
 	# Remove adaptor
 	print_log("Clipping adaptor ...");
@@ -595,7 +590,7 @@ sub process_raw {
 			print_log("Adaptor is too long, please check it!");
 			exit;	
 		} else {
-			system("fastx_clipper -i $label/_raw/sRNA.fa -a $adaptor -o $label/_raw/srna.cfa -v");
+			fasta_clipper();
 		}
 	} else {
 		print_log("Unkown adaptor: $adaptor");
@@ -611,7 +606,7 @@ sub process_raw {
 	if ( $minrl >= 15 && $minrl <=50 ) {
 		if ( $maxrl >= 15 or $maxrl <=50 ) {
 			if ( $minrl <= $maxrl ) {
-				fasta_len_filter("$label/_raw/srna.cfa", "$label/_raw/srna.lcfa", "$minrl");
+				fasta_len_filter();
 			} else {
 				print_log("min_read_length larger than max_read_length, please check your configuration file!\n");
 				exit;
@@ -626,27 +621,107 @@ sub process_raw {
 	
 	# Collapse the fasta sequence to generate a non-redundant fasta file	
 	print_log("Collapsing ...");
-	system("fastx_collapser -v -i $label/_raw/srna.lcfa -o $label/_raw/srna.clcfa");
+	collapse_fasta();
+
+}
+
+# Convert fastq to fasta
+sub fastq_to_fasta {
+
+	my ($fastq) = @_;
+	my $fasta = "$tsR_dir/$label/_raw/srna.f";
+
+	my $id = undef;
+	my $seq = undef;
+	my $discard = undef;
+	open (IN, $fastq) or die "Cannot open file $fastq: $!\n";
+	open (OUT, ">$fasta") or die "Cannot open file $fasta: $!\n";
+	while ($id = <IN>) {
+		$id =~ s/^\@/>/;
+		$seq = <IN>;
+		print OUT $id, $seq;
+		$discard = <IN>;
+		$discard = <IN>;
+	}
+	close IN;
+	close OUT;
+
+}
+
+# Clip adaptor
+sub fasta_clipper {
+
+	my $fasta = "$label/_raw/srna.f";
+	my $fastc = "$label/_raw/srna.fc";
+
+	# Covert adaptor to capital
+	$adaptor =~ tr/atcgn/ATCGN/;
+	$adaptor = substr($adaptor,0,6);
+
+	my $id = undef;
+	my $seq = undef;
+	open (IN, $fasta) or die "Cannot open file $fasta: $!\n";
+	open (OUT, ">$fastc") or die "Cannot open file $fastc: $!\n";
+	while ($id = <IN>) {
+		$seq = <IN>;
+		$seq =~ tr/atcgn/ATCGN/;
+		chomp $seq;
+		if ($seq =~ /(\S+)$adaptor/) {
+			$seq = $1;
+		}
+		print OUT $id, $seq, "\n";
+	}
+	close IN;
+	close OUT;
 
 }
 
 # Fasta sequence length filter
 sub fasta_len_filter {
 
-	my ($input, $output, $len) = @_;
+	my $fastc = "$tsR_dir/$label/_raw/srna.fc";
+	my $fastl = "$tsR_dir/$label/_raw/srna.fl";
+	my $len = $minrl;
 
-	open (IN, $input) or die "Cannot open file $input: $!\n";
-	open (OUT, ">$output") or die "Cannot open file $output: $!\n";
-	while (my $id = <IN>) {
-		my $seq = <IN>;
+	my $id  = undef;
+	my $seq = undef;
+	open (IN, $fastc) or die "Cannot open file $fastc: $!\n";
+	open (OUT, ">$fastl") or die "Cannot open file $fastl: $!\n";
+	while ($id = <IN>) {
+		$seq = <IN>;
 		chomp $seq;
 		$seq =~ s/\s+//g;
 		if (length($seq) >= $len) {
-			print OUT $id;
-			print OUT $seq, "\n";
+			print OUT $id, $seq, "\n";
 		}
 	}
 	close IN;
+	close OUT;
+
+}
+
+# Collapse fasta
+sub collapse_fasta {
+
+	my $fastl = "$tsR_dir/$label/_raw/srna.fl";
+	my $fasta = "$tsR_dir/$label/_raw/sRNA.fa";
+
+	my %num = ();
+	my $id = undef;
+	my $seq = undef;
+	open (IN, $fastl) or die "Cannot open file $fastl: $!\n";
+	while ($id = <IN>) {
+		$seq = <IN>;
+		$num{$seq}++;
+	}
+	close IN;
+
+	my $index = 0;
+	open (OUT, ">$fasta") or die "Cannot open file $fasta: $!\n";
+	foreach my $seq (reverse sort {$num{$a} <=> $num{$b}} keys %num) {
+		$index++;
+		print OUT ">$index-$num{$seq}\n$seq";
+	}
 	close OUT;
 
 }
