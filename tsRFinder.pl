@@ -16,7 +16,6 @@
 use strict;
 use warnings;
 use Env;
-use Config::Simple;
 use Getopt::Std;
 
 # Enviroment
@@ -152,8 +151,7 @@ sub init {
 	if ( $config_file ) {
 		if ( -e $config_file ) {
 			print_log("Parsing configuration file $config_file");
-			my $cfg = new Config::Simple("$config_file");
-			%config = $cfg->vars();
+			parse_config($config_file);
 		} else {
 			print_log("Configuration file $config_file does not exist!");
 			exit;
@@ -207,6 +205,30 @@ sub clean_data {
 	system("rm *.len");
 	system("rm tscs.*");
 	system("mv ./tsRFinder.log $label/");
+
+}
+
+# Parse config
+sub parse_config {
+
+	my ($file) = @_;
+
+	open (FILE, $file) or die "Cannot open file $file: $!\n";
+	while (<FILE>) {
+		next if /^\s{0,}\#/;
+		if (/\s{0,}(\S+)\s{0,}\:\s{0,}(\S+)\s{0,}\#{0,}/) {
+			$config{$1} = $2;
+		} elsif (/\s{0,}(\S+)\s{0,}\:\s{0,}\#{0,}/) {
+			$config{$1} = undef;
+		} else {
+			if ($option{m} eq "debug") {
+				print_log("Unknown configuration line: $_");
+			} else {
+				next;
+			}
+		}
+	}
+	close FILE;
 
 }
 
