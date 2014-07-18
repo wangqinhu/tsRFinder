@@ -134,7 +134,7 @@ sub init {
 						usage();
 					}
 				} else {
-					print "No label of this analysis specified!\n";
+					print "No label specified!\n";
 					usage();
 				}
 			} else {
@@ -160,7 +160,7 @@ sub init {
 		}
 	}
 
-	# Check critical dependency
+	# Check critical dependencies
 	check_install("bowtie-build");
 	check_install("bowtie");
 	check_install("R");
@@ -206,25 +206,26 @@ sub clean_data {
 	system("rm BDI.txt infile.txt");
 	system("rm *.len");
 	system("rm tscs.*");
+	system("mv ./tsRFinder.log $label/");
 
 }
 
 # Create the output directory
 sub create_directory {
 
-	if ( $label ~~ ["demo", "lib", "doc"] ) {
+	if ( $label ~~ ["tsRFinder", "demo", "lib", "doc"] ) {
 		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
-		print "Label demo, lib and doc are not allowed!\n";
+		print "Label tsRFinder, demo, lib and doc are not allowed!\n";
 		exit;
 	}
 
-	if ( -e "$tsR_dir/$label" ) {
+	if ( -e "$label" ) {
 		print "$label exist, remove it? [N/y] ";
 		my $answer = <>;
 		chomp $answer;
 		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
 			print_log("Directory $label will be removed now!");
-			system("rm -rf $tsR_dir/$label");
+			system("rm -rf $label");
 		} else {
 			print_log("Exit: directory $label exists");
 			exit;
@@ -242,7 +243,7 @@ sub tRNA_scan {
 		if ( -e $refseq ) {
 			predict_tRNA();
 		} else {
-			print_log("Exit: No reference genome specified, how did you get here?");
+			print_log("Exit: No reference genome specified!");
 			exit;
 		}
 	} else {
@@ -303,8 +304,8 @@ sub format_tRNA {
 
 	print_log("Formating tRNA ...");
 	open (IN, "$file") or die "Cannot open file $file: $!\n";
-	open (TSQ, ">$tsR_dir/$label/tRNA.fa") or die "Cannot create file tRNA.fa: $!\n";
-	open (TSS, ">$tsR_dir/$label/tRNA.fas") or die "Cannot create file tRNA.fas: $!\n";
+	open (TSQ, ">$label/tRNA.fa") or die "Cannot create file tRNA.fa: $!\n";
+	open (TSS, ">$label/tRNA.fas") or die "Cannot create file tRNA.fas: $!\n";
 	while (<IN>) {
 		if (/\(+/) {
 			s/\(/\>/g;
@@ -350,7 +351,11 @@ sub run_tRNAscanSE {
 			print_log("tRNAscan-SE is not correctly installed, e.g. PERL5LIB is not correctly set.");
 			exit;
 		} else {
-			system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
+			if ($mode eq "debug") {
+				system("tRNAscan-SE -f $label/$ss_file $refseq");
+			} else {
+				system("tRNAscan-SE -f $label/$ss_file $refseq 1>/dev/null 2>&1");
+			}
 		}
 	}
 
@@ -501,7 +506,7 @@ sub format_reads {
 		format_fasta("$srna", "$label/sRNA.fa");
 	# If not a fastq or fasta file
 	} else {
-		print_log("Exit: unkown filetype detected! $file ");
+		print_log("Exit: unknown filetype detected! $file ");
 		exit;
 	}
 
@@ -629,7 +634,7 @@ sub process_raw {
 sub fastq_to_fasta {
 
 	my ($fastq) = @_;
-	my $fasta = "$tsR_dir/$label/_raw/srna.f";
+	my $fasta = "$label/_raw/srna.f";
 
 	my $id = undef;
 	my $seq = undef;
@@ -679,8 +684,8 @@ sub fasta_clipper {
 # Fasta sequence length filter
 sub fasta_len_filter {
 
-	my $fastc = "$tsR_dir/$label/_raw/srna.fc";
-	my $fastl = "$tsR_dir/$label/_raw/srna.fl";
+	my $fastc = "$label/_raw/srna.fc";
+	my $fastl = "$label/_raw/srna.fl";
 	my $len = $minrl;
 
 	my $id  = undef;
@@ -703,8 +708,8 @@ sub fasta_len_filter {
 # Collapse fasta
 sub collapse_fasta {
 
-	my $fastl = "$tsR_dir/$label/_raw/srna.fl";
-	my $fasta = "$tsR_dir/$label/_raw/sRNA.fa";
+	my $fastl = "$label/_raw/srna.fl";
+	my $fasta = "$label/_raw/sRNA.fa";
 
 	my %num = ();
 	my $id = undef;
@@ -769,11 +774,13 @@ sub print_log {
 # sRNA mapping
 sub map_srna {
 
-	my $refseq = "$tsR_dir/$label/tRNA.fa";
-	my $rnaseq = "$tsR_dir/$label/sRNA.fa";
+	my $pwd = `pwd`;
+	chomp $pwd;
+	my $refseq = "$pwd/$label/tRNA.fa";
+	my $rnaseq = "$pwd/$label/sRNA.fa";
 
 	# Directories and setting
-	my $dir = "$tsR_dir/$label/_srna_map";
+	my $dir = "$pwd/$label/_srna_map";
 	system("mkdir $dir");
 	system("mkdir $dir/map");
 	system("mkdir $dir/tmp");
@@ -787,12 +794,19 @@ sub map_srna {
 
 	# Building and Mapping
 	print_log("Building reference ...");
-	system("bowtie-build $refseq $refseqdb 1>/dev/null 2>&1");
+	if ($mode eq "debug") {
+		system("bowtie-build $refseq $refseqdb");
+	} else {
+		system("bowtie-build $refseq $refseqdb 1>/dev/null 2>&1");
+	}
 	print_log("Mapping ...");
 	chdir "$dir_map";
-	system("bowtie -v 0 -k 1 -a --best --strata $refseqdb -f $rnaseq --refout -t 1>/dev/null 2>&1");
-	chdir "$tsR_dir";
-
+	if ($mode eq "debug") {
+		system("bowtie -v 0 -k 1 -a --best --strata $refseqdb -f $rnaseq --refout -t");
+	} else {
+		system("bowtie -v 0 -k 1 -a --best --strata $refseqdb -f $rnaseq --refout -t 1>/dev/null 2>&1");
+	}
+	chdir "$pwd";
 
 	# Get reference size
 	open (REF, "$refseq") or die "Cannot open $refseq: $!\n";
@@ -871,9 +885,13 @@ sub map_srna {
 
 	# Plot pattern  	
 	chdir "$dir";
-	system("R CMD BATCH $tsR_dir/lib/draw_map.r 1>/dev/null 2>&1");
-	system("mv $dir_img $tsR_dir/$label/images");
-	chdir "$tsR_dir";
+	if ($mode eq "debug") {
+		system("R CMD BATCH $tsR_dir/lib/draw_map.r");
+	} else {
+		system("R CMD BATCH $tsR_dir/lib/draw_map.r 1>/dev/null 2>&1");
+	}
+	system("mv $dir_img $pwd/$label/images");
+	chdir "$pwd";
 
 }
 
@@ -982,7 +1000,11 @@ sub define_tsRNA {
 		#                  Xmax-Xmin
 		#
 		system("cp $dir_map/../tmp/$refid.txt infile.txt");
-		system("R CMD BATCH $tsR_dir/lib/bdi.r");
+		if ($mode eq "debug") {
+			system("R CMD BATCH $tsR_dir/lib/bdi.r");
+		} else {
+			system("R CMD BATCH $tsR_dir/lib/bdi.r 1>/dev/null 2>&1");
+		}
 		open (BDI, "BDI.txt") or die  "Cannot open file BDI.txt!\n";
 		my @bdi = ();
 		while (<BDI>) {
@@ -1147,53 +1169,53 @@ sub write_report {
 	print_log("---------\n");
 
 	# tRNA summary
-	my $ntrna = `grep '>' $tsR_dir/$label/tRNA.fa | wc -l`;
+	my $ntrna = `grep '>' $label/tRNA.fa | wc -l`;
 	$ntrna =~ s/\s//g;
 	chomp $ntrna;
-	print_log("    tRNA seq : $tsR_dir/$label/tRNA.fa");
+	print_log("    tRNA seq : $label/tRNA.fa");
 	print_log("       Total : $ntrna\n");
 
 	# sRNA summary
-	my ($st, $su) = read_stat("$tsR_dir/$label/sRNA.fa");
-	my ($tt, $tu) = read_stat("$tsR_dir/$label/tRNA.read.fa");
-	print_log("  sRNA reads : $tsR_dir/$label/sRNA.fa");
+	my ($st, $su) = read_stat("$label/sRNA.fa");
+	my ($tt, $tu) = read_stat("$label/tRNA.read.fa");
+	print_log("  sRNA reads : $label/sRNA.fa");
 	print_log("       Total : $st");
 	print_log("      Unique : $su\n");
 
 	# tRNA reads summary
-	print_log("  tRNA reads : $tsR_dir/$label/tRNA.read.fa");
+	print_log("  tRNA reads : $label/tRNA.read.fa");
 	print_log("       Total : $tt");
 	print_log("      Unique : $tu\n");
 
 	# tsRNA seq summary
-	my $ntsrna = `cat $tsR_dir/$label/tsRNA.seq | wc -l`;
+	my $ntsrna = `cat $label/tsRNA.seq | wc -l`;
 	$ntsrna =~ s/\s//g;
 	chomp $ntsrna;
 	my $nr = '!a[$2]++';
-	my $uts = `awk '$nr' $tsR_dir/$label/tsRNA.seq | wc -l`;
+	my $uts = `awk '$nr' $label/tsRNA.seq | wc -l`;
 	$uts =~ s/\s//g;
 	chomp $uts;
-	print_log("   tsRNA seq : $tsR_dir/$label/tsRNA.seq");
+	print_log("   tsRNA seq : $label/tsRNA.seq");
 	print_log("       Total : $ntsrna");
 	print_log("      Unique : $uts\n");
 
 	# tsRNA report
-	print_log("tsRNA report : $tsR_dir/$label/tsRNA.report.xls\n");
+	print_log("tsRNA report : $label/tsRNA.report.xls\n");
 
 	# tsRNA map
-	print_log("    text map : $tsR_dir/$label/tsRNA.tmap\n");
-	print_log("  visual map : $tsR_dir/$label/images\n");
+	print_log("    text map : $label/tsRNA.tmap\n");
+	print_log("  visual map : $label/images\n");
 
 	# sRNA/tRNA distribution
-	print_log("distribution : $tsR_dir/$label/distribution.pdf\n");
+	print_log("distribution : $label/distribution.pdf\n");
 
 	# tRNA cleavage site
 	print_log("    cleavage :");
-	print_log("      detail : $tsR_dir/$label/cleavage.txt");
-	print_log("     profile : $tsR_dir/$label/cleavage_profile.pdf\n");
+	print_log("      detail : $label/cleavage.txt");
+	print_log("     profile : $label/cleavage_profile.pdf\n");
 
 	# tRNA family
-	print_log("tsRNA family : $tsR_dir/$label/tsRNA.fam\n");
+	print_log("tsRNA family : $label/tsRNA.fam\n");
 
 	# statistical measurement
 	stat_index();
@@ -1224,12 +1246,16 @@ sub read_stat {
 sub draw_distribution {
 
 	print_log("Drawing sRNA/tRNA distribution ...");
-	srna_len_stat("$tsR_dir/$label/sRNA.fa");
+	srna_len_stat("$label/sRNA.fa");
 	system("mv read.len srna.len");
-	srna_len_stat("$tsR_dir/$label/tRNA.read.fa");
+	srna_len_stat("$label/tRNA.read.fa");
 	system("mv read.len trna.len");
-	system("R CMD BATCH $tsR_dir/lib/draw_distribution.r");
-	system("mv distribution.pdf $tsR_dir/$label/");
+	if ($mode eq "debug") {
+		system("R CMD BATCH $tsR_dir/lib/draw_distribution.r");
+	} else {
+		system("R CMD BATCH $tsR_dir/lib/draw_distribution.r 1>/dev/null 2>&1");
+	}
+	system("mv distribution.pdf $label/");
 
 }
 
@@ -1265,7 +1291,7 @@ sub srna_len_stat {
 
 sub stat_index {
 
-	my ($sm_hash) = statistical_measure("$tsR_dir/$label/tsRNA.tmap");
+	my ($sm_hash) = statistical_measure("$label/tsRNA.tmap");
 
 	my @sen = ();
 	my @spe = ();
@@ -1426,11 +1452,11 @@ sub statistical_measure {
 # Find cleavage sites
 sub find_cleavage_site {
 
-	my ($cp_hash) = cleavage_pattern("$tsR_dir/$label/tsRNA.tmap");
+	my ($cp_hash) = cleavage_pattern("$label/tsRNA.tmap");
 
 	print_log("Gathering cleavage information ...");
 
-	open (CLVG, ">$tsR_dir/$label/cleavage.txt");
+	open (CLVG, ">$label/cleavage.txt");
 	print CLVG "tRNA\ttsR5\ttsR3\n";
 	foreach (keys %$cp_hash) {
 		print CLVG $_, "\t", $cp_hash->{$_},"\n";
@@ -1530,7 +1556,7 @@ sub cleavage_pattern {
 # Class tsRNA
 sub srna_family {
 
-	my $file = "$tsR_dir/$label/tsRNA.seq";
+	my $file = "$label/tsRNA.seq";
 	my @nwalign = ("nwalign", "nwalign_linux32", "nwalign_linux64");
 	my $nwalign = $nwalign[ os_index() ];
 
@@ -1586,7 +1612,7 @@ sub srna_family {
 		}
 	}
 
-	open (CLS, ">$tsR_dir/$label/tsRNA.fam") or die "Cannot open file tsRNA.fam: $!\n";
+	open (CLS, ">$label/tsRNA.fam") or die "Cannot open file tsRNA.fam: $!\n";
 	foreach (reverse sort by_len @fam) {
 		print CLS $_, "\n";
 	}
@@ -1647,7 +1673,7 @@ sub draw_cleavage_site {
 
 	print_log("Building cleavage profile ...");
 
-	open (IN, "$tsR_dir/$label/cleavage.txt") or die "Cannot open file $label/cleavage.txt: $!\n";
+	open (IN, "$label/cleavage.txt") or die "Cannot open file $label/cleavage.txt: $!\n";
 
 	my %tsR5 = ();
 	my %tsR3 = ();
@@ -1675,7 +1701,11 @@ sub draw_cleavage_site {
 	}
 	close TC3;
 
-	system("R CMD BATCH $tsR_dir/lib/draw_cleavage_site.r");# 1>/dev/null 2>&1");
+	if ($mode eq "debug") {
+		system("R CMD BATCH $tsR_dir/lib/draw_cleavage_site.r");
+	} else {
+		system("R CMD BATCH $tsR_dir/lib/draw_cleavage_site.r 1>/dev/null 2>&1");
+	}
 	system("mv cleavage_profile.pdf $label/");
 
 }
@@ -1760,7 +1790,7 @@ exit;
 =head1 SYNOPSIS
 
   tsRFinder.pl <option>
-  For example: ./tsRFinder -c demo/tsR.conf
+  For example: ./tsRFinder.pl -c demo/tsR.conf
   Type "./tsRFinder.pl -h" to see all the options.
  
 =head1 AUTHOR
