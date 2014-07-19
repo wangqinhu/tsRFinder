@@ -19,7 +19,7 @@ use Env;
 use Getopt::Std;
 
 # Enviroment
-my $version = '0.8';
+my $version = '0.9';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -524,8 +524,13 @@ sub format_reads {
 		format_fasta("$label/_raw/sRNA.fa", "$label/sRNA.fa");
 	# For fasta format
 	} elsif ($file_type eq "fa") {
-		# Format fasta file required by tsRFinder
-		format_fasta("$srna", "$label/sRNA.fa");
+		my $fasta = check_fasta($file);
+		if ($fasta eq "valid") {
+			system("cp $srna $label/sRNA.fa");
+		} else {
+			# Format fasta file required by tsRFinder
+			format_fasta("$srna", "$label/sRNA.fa");
+		}
 	# If not a fastq or fasta file
 	} else {
 		print_log("Exit: unknown filetype detected! $file ");
@@ -553,14 +558,12 @@ sub fastq_or_fasta {
 
 }
 
-# Define a special fasta file required by tsRFinder 
-sub format_fasta {
+# Check fasta
+sub check_fasta {
 
-	my ($input, $output) = @_;
+	my ($file) = @_;
 
-	print_log("Formatting fasta reads ...");
-
-	my $head = `head -1 $input`;
+	my $head = `head -1 $file`;
 
 	# Typically, a fasta head carrying both id and num sections is required
 	unless ($head =~ /^\>(\S+)[\-|\||\_|\t|\s+](\d+)/) {
@@ -568,25 +571,49 @@ sub format_fasta {
 		exit;
 	}
 
+	if ($head =~ /^\>[A-Z]{1,20}\d{1,20}\_\d+/i) {
+		print_log("Valid sRNA file found!");
+		return "valid";
+	}
+
+	return "unknown";
+
+}
+
+# Define a special fasta file required by tsRFinder
+sub format_fasta {
+
+	my ($input, $output) = @_;
+
+	print_log("Formatting fasta reads ...");
+
+	my $head = `head -1 $input`;
 	open (IN, $input) or die "Cannot open file $input: $!\n";
 	open (OUT, ">$output") or die "Cannot open file $output: $!\n";
-	while (<IN>){
-		# Detect, split id and num by [-, |, _, \s, \t]
-		if (/^\>(\S+)[\-|\||\_|\t|\s+](\d+)/) {
-			my $id = $1;
-			my $num = $2;
-			# Usually, small RNA sequencing will generate ~ 10,000,000 reads
-			# and 7 characters are enough to represent the unique reads 
-			my $zlen = 7 - length($id);
-			my $str = '0' x $zlen;
-			# The head is formated as follow:
-			# lab0000001
-			# ...
-			# lab9999999 
-			$id = $label . $str . $id . "_" . $num;
-			print OUT ">$id\n";
-		} else {
+	if ($head =~ /^\>[A-Z]{1,20}\d{1,20}[\||\t|\-]\d+/i) {
+		while (<IN>) {
+			s/[\||\t|\-]/\_/;
 			print OUT $_;
+		}
+	} else {
+		while (<IN>){
+			# Detect, split id and num by [-, |, _, \s, \t]
+			if (/^\>(\S+)[\-|\||\_|\t|\s+](\d+)/) {
+				my $id = $1;
+				my $num = $2;
+				# Usually, small RNA sequencing will generate ~ 10,000,000 reads
+				# and 7 characters are enough to represent the unique reads
+				my $zlen = 7 - length($id);
+				my $str = '0' x $zlen;
+				# The head is formated as follow:
+				# lab0000001
+				# ...
+				# lab9999999
+				$id = $label . $str . $id . "_" . $num;
+				print OUT ">$id\n";
+			} else {
+				print OUT $_;
+			}
 		}
 	}
 	close IN;
