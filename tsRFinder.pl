@@ -751,10 +751,17 @@ sub fasta_clipper {
 		$seq = <IN>;
 		$seq =~ tr/atcgn/ATCGN/;
 		chomp $seq;
-		if ($seq =~ /(\S+)$adaptor/) {
-			$seq = $1;
+		my $pos = -1;
+		my $len = 0;
+		while(($pos = index($seq, $adaptor, $pos)) > -1){
+			$len = $pos;
+			$pos++;
 		}
-		print OUT $id, $seq, "\n";
+		my $trimmed_seq = $seq;
+		if($len > -1){
+			$trimmed_seq = substr($seq, 0, $len);
+		}
+		print OUT $id, $trimmed_seq, "\n";
 	}
 	close IN;
 	close OUT;
