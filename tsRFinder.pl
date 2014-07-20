@@ -18,7 +18,7 @@ use warnings;
 use Env;
 use Getopt::Std;
 
-# Enviroment
+# Environment
 my $version = '0.9';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
@@ -106,14 +106,12 @@ sub init {
 		version();
 	}
 
-	# Check enviroment
+	# Check environment
 	if (!defined($tsR_dir)) {
-		print "Exit: environment tsR_dir is not correctly set up!\n";
-		print "Check doc/manual.pdf to see how to do this.\n";
-		exit;
+		set_env_tmp();
 	}
 	chomp $tsR_dir;
-	$tsR_dir =~ s/\/\s{0,}$//;    # replace extra "/" (and spaces) someone may include in the enviroment
+	$tsR_dir =~ s/\/\s{0,}$//;    # replace extra "/" (and spaces) someone may include in the environment
 	unless ( -d $tsR_dir ) {
 		print "Exit: environment tsR_dir is set, but the directory is not exist!\n";
 		exit;
@@ -254,6 +252,39 @@ sub create_directory {
 		}
 	}
 	system("mkdir $label");
+
+}
+
+# Set temporary environment
+sub set_env_tmp {
+
+	print_log("WARNING: Environment tsR_dir is not correctly set up!");
+	my $dir = `dirname $0`;
+	my $app = `basename $0`;
+	my $pwd = `pwd`;
+	chomp $dir;
+	chomp $app;
+	chomp $pwd;
+
+	# If tsRFinder.pl is a link file
+	my $fapp = $dir . "/" . "$app";
+	if ( -l $fapp) {
+		print_log("Check doc/manual.pdf to see how to do this.");
+		exit;
+	}
+
+	# For abs path
+	if ($dir =~ /^\//) {
+		$tsR_dir = $dir;
+		print_log("Set temporary tsR_dir = $tsR_dir");
+	# For rel path
+	} elsif ($dir =~ /\./) {
+		$tsR_dir = "$pwd/$dir";
+		print_log("Set temporary tsR_dir = $tsR_dir");
+	} else {
+		print_log("Check doc/manual.pdf to see how to do this.");
+		exit;
+	}
 
 }
 
