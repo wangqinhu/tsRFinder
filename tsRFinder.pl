@@ -41,6 +41,7 @@ my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
+my $tgz      = $option{o} || $config{"output_compressed"} || "no";
 
 find_tsRNA();
 
@@ -89,7 +90,7 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("m:c:l:g:t:s:a:n:x:f:w:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:f:w:o:hv", \%option) or die "$!\n" . usage();
 
 	# Defualt mode: run
 	unless ($option{m}) {
@@ -183,7 +184,11 @@ sub stop {
 	} else {
 		print_log("Attention: you are in debug mode, temporary files were keeped!");
 	}
-	print "Finshed!\n";
+
+	# Compress output files
+	compress_output();
+
+	print "\nFinished!\n";
 	exit;
 
 }
@@ -203,7 +208,7 @@ sub clean_data {
 	system("rm BDI.txt infile.txt");
 	system("rm *.len");
 	system("rm tscs.*");
-	system("mv ./tsRFinder.log $label/");
+	system("mv tsRFinder.log $label/");
 
 }
 
@@ -1811,6 +1816,22 @@ sub by_num {
 
 }
 
+# Compress output files
+sub compress_output {
+
+	if ($tgz eq "yes") {
+		print "Compressing output files ...\n";
+		if ($mode eq "debug") {
+			system("tar -czf $label.tgz $label/");
+		} else {
+			system("tar -czf $label.tgz $label/ 1>/dev/null 2>&1");
+			system("rm -rf $label/");
+		}
+		print "All output files are in $label.tgz now.\n";
+	}
+
+}
+
 # Check dependency
 sub check_install {
 
@@ -1847,6 +1868,7 @@ tsRFinder usage:
     -x  Max read length            [default 45]
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
+    -o  Output compressed tarball  [default no]
     -m  mode, run/debug            [defualt run]
     -h  Help
     -v  Version
