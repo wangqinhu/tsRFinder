@@ -188,7 +188,7 @@ sub stop {
 	# Compress output files
 	compress_output();
 
-	print "\nFinished!\n";
+	print "Finished!\n";
 	exit;
 
 }
@@ -1262,8 +1262,7 @@ sub format_tsRNA {
 # write report file
 sub write_report {
 
-	print_log("\n\n");
-	print_log("---------");
+	print_log("\n---------");
 	print_log(" SUMMARY ");
 	print_log("---------\n");
 
@@ -1271,20 +1270,20 @@ sub write_report {
 	my $ntrna = `grep '>' $label/tRNA.fa | wc -l`;
 	$ntrna =~ s/\s//g;
 	chomp $ntrna;
-	print_log("    tRNA seq : $label/tRNA.fa");
-	print_log("       Total : $ntrna\n");
+	print_log("*     tRNA seq : $label/tRNA.fa");
+	print_log("         Total : $ntrna");
 
 	# sRNA summary
 	my ($st, $su) = read_stat("$label/sRNA.fa");
 	my ($tt, $tu) = read_stat("$label/tRNA.read.fa");
-	print_log("  sRNA reads : $label/sRNA.fa");
-	print_log("       Total : $st");
-	print_log("      Unique : $su\n");
+	print_log("*   sRNA reads : $label/sRNA.fa");
+	print_log("         Total : $st");
+	print_log("        Unique : $su");
 
 	# tRNA reads summary
-	print_log("  tRNA reads : $label/tRNA.read.fa");
-	print_log("       Total : $tt");
-	print_log("      Unique : $tu\n");
+	print_log("*   tRNA reads : $label/tRNA.read.fa");
+	print_log("         Total : $tt");
+	print_log("        Unique : $tu");
 
 	# tsRNA seq summary
 	my $ntsrna = `cat $label/tsRNA.seq | wc -l`;
@@ -1294,27 +1293,27 @@ sub write_report {
 	my $uts = `awk '$nr' $label/tsRNA.seq | wc -l`;
 	$uts =~ s/\s//g;
 	chomp $uts;
-	print_log("   tsRNA seq : $label/tsRNA.seq");
-	print_log("       Total : $ntsrna");
-	print_log("      Unique : $uts\n");
+	print_log("*    tsRNA seq : $label/tsRNA.seq");
+	print_log("         Total : $ntsrna");
+	print_log("        Unique : $uts");
 
 	# tsRNA report
-	print_log("tsRNA report : $label/tsRNA.report.xls\n");
+	print_log("* tsRNA report : $label/tsRNA.report.xls");
 
 	# tsRNA map
-	print_log("    text map : $label/tsRNA.tmap\n");
-	print_log("  visual map : $label/images\n");
+	print_log("*     Text map : $label/tsRNA.tmap");
+	print_log("*   Visual map : $label/images");
 
 	# sRNA/tRNA distribution
-	print_log("distribution : $label/distribution.pdf\n");
+	print_log("* Distribution : $label/distribution.pdf");
 
 	# tRNA cleavage site
-	print_log("    cleavage :");
-	print_log("      detail : $label/cleavage.txt");
-	print_log("     profile : $label/cleavage_profile.pdf\n");
+	print_log("*     Cleavage :");
+	print_log("        Detail : $label/cleavage.txt");
+	print_log("       Profile : $label/cleavage_profile.pdf");
 
 	# tRNA family
-	print_log("tsRNA family : $label/tsRNA.fam\n");
+	print_log("* tsRNA family : $label/tsRNA.fam");
 
 	# statistical measurement
 	stat_index();
@@ -1414,10 +1413,10 @@ sub stat_index {
 	$spe = format_percent($spe,4);
 	$acc = format_percent($acc,4);
 
-	print_log("stat. by BDI :");
-	print_log(" Sensitivity : $sen");
-	print_log(" Specificity : $spe");
-	print_log("    Accuracy : $acc\n");
+	print_log("* Stat. by BDI :");
+	print_log("   Sensitivity : $sen");
+	print_log("   Specificity : $spe");
+	print_log("      Accuracy : $acc\n");
 
 }
 
@@ -1869,7 +1868,7 @@ tsRFinder usage:
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
     -o  Output compressed tarball  [default no]
-    -m  mode, run/debug            [defualt run]
+    -m  Mode, run/debug            [defualt run]
     -h  Help
     -v  Version
 
