@@ -114,14 +114,14 @@ tsRFinder usage:
     -x  Max read length            [default 45]
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
-    -m  mode, run/debug            [defualt run]
+    -o  Output compressed tarball  [default no]
+    -m  Mode, run/debug            [defualt run]
     -h  Help
     -v  Version
 
 Example:
 
     tsRFinder.pl -c demo/tsR.conf
-
 \end{verbatim}
 \end{tcolorbox}}
 
@@ -161,16 +161,17 @@ mode                :  run
 label               :  Abc
 reference_genome    :  demo/genome.fa 
 reference_tRNA      :
-sRNA                :  demo/sRNA.fq
+sRNA                :  demo/sRNA.fq.gz
 adaptor             :  TGGAATTCTCGGGTGCCAAGG
 min_read_length     :  18
 max_read_length     :  45
 family_threshold    :  72
 tRNA_with_label     :  no
+output_compressed   :  no
 \end{verbatim}
 \end{tcolorbox}}
 
-Currently we have 10 items (13 options in command line) used for configuration file filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least. If you are using a raw sequence data, please also input the adaptor sequence (\emph{-a}). If you are not using a reference tRNA (\emph{-t}) prepared by yourself, leave this argument to EMPTY please.
+Currently we have 11 items (14 options in command line) used for configuration file filling. The argument items and the inputs are separated by colon (":"). We recommend you using the first three letters of the organism you are analysing as a label (e.g. for \textit{Arabidopsis thaliana} we use \textit{Ath}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least (The FASTQ file usually is very big and thus tsRFinder support gzipped file input for sRNA, plain ASCII input is also acceptable). If you are using a raw sequence data, please also input the adaptor sequence (\emph{-a}). If you are not using a reference tRNA (\emph{-t}) prepared by yourself, leave this argument to EMPTY please.
 
 Once your configuration file is well prepared, typing the following in the terminal to run tsRFinder. In this demo, the configuration file (\emph{-c}) is at demo/tsR.conf, so we write like this:
 
@@ -180,7 +181,7 @@ Once your configuration file is well prepared, typing the following in the termi
 \end{verbatim}
 \end{tcolorbox}}
 
-tsRFinder can work in run and debug modes (\emph{-m}), if you find some problem or want to extract some temporary files, you can enable debug mode, otherwise please use run mode (default). To check the usage or version, you can use \emph{-h} and \emph{-v} option, respectively.
+tsRFinder can work in run and debug modes (\emph{-m}), if you find some problem or want to extract some temporary files, you can enable debug mode, otherwise please use run mode (default). To check the usage or version, you can use \emph{-h} and \emph{-v} option, respectively. To create a compressed tarball of the output file, use \emph{-o yes} option please.
 
 \subsection{Demo output}
 
@@ -193,41 +194,29 @@ See our demo summary here:
  SUMMARY 
 ---------
 
-    tRNA seq : Abc/tRNA.fa
-       Total : 5
-
-  sRNA reads : Abc/sRNA.fa
-       Total : 12472
-      Unique : 7521
-
-  tRNA reads : Abc/tRNA.read.fa
-       Total : 283
-      Unique : 50
-
-   tsRNA seq : Abc/tsRNA.seq
-       Total : 7
-      Unique : 6
-
-tsRNA report : Abc/tsRNA.report.xls
-
-    text map : Abc/tsRNA.tmap
-
-  visual map : Abc/images
-
-distribution : Abc/distribution.pdf
-
-    cleavage :
-      detail : Abc/cleavage.txt
-     profile : Abc/cleavage_profile.pdf
-
-tsRNA family : Abc/tsRNA.fam
-
-stat. by BDI :
- Sensitivity : 0.9593
- Specificity : 0.7825
-    Accuracy : 0.8819
-
----------
+*     tRNA seq : Abc/tRNA.fa
+         Total : 5
+*   sRNA reads : Abc/sRNA.fa
+         Total : 11987
+        Unique : 7227
+*   tRNA reads : Abc/tRNA.read.fa
+         Total : 283
+        Unique : 50
+*    tsRNA seq : Abc/tsRNA.seq
+         Total : 7
+        Unique : 6
+* tsRNA report : Abc/tsRNA.report.xls
+*     Text map : Abc/tsRNA.tmap
+*   Visual map : Abc/images
+* Distribution : Abc/distribution.pdf
+*     Cleavage :
+        Detail : Abc/cleavage.txt
+       Profile : Abc/cleavage_profile.pdf
+* tsRNA family : Abc/tsRNA.fam
+* Stat. by BDI :
+   Sensitivity : 0.9593
+   Specificity : 0.7825
+      Accuracy : 0.8819
 \end{verbatim}
 \end{tcolorbox}}
 
