@@ -191,6 +191,7 @@ sub stop {
 # Clean the temporary files
 sub clean_data {
 
+	system("rm -rf $label/sRNA.fq 1>/dev/null 2>&1");
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
@@ -542,6 +543,12 @@ sub format_reads {
 		exit;
 	}
 
+	# Decompress gzip file
+	if ($file =~ /.gz$/) {
+			system("gzip -dc $file > $label/sRNA.fq");
+			$file = "$label/sRNA.fq";
+	}
+
 	# Detect the file type of sRNA supplied	
 	my $file_type = fastq_or_fasta($file);
 
@@ -557,10 +564,10 @@ sub format_reads {
 	} elsif ($file_type eq "fa") {
 		my $fasta = check_fasta($file);
 		if ($fasta eq "valid") {
-			system("cp $srna $label/sRNA.fa");
+			system("cp $file $label/sRNA.fa");
 		} else {
 			# Format fasta file required by tsRFinder
-			format_fasta("$srna", "$label/sRNA.fa");
+			format_fasta("$file", "$label/sRNA.fa");
 		}
 	# If not a fastq or fasta file
 	} else {
