@@ -785,7 +785,6 @@ sub fasta_len_filter {
 
 	my $fastc = "$label/_raw/srna.fc";
 	my $fastl = "$label/_raw/srna.fl";
-	my $len = $minrl;
 
 	my $id  = undef;
 	my $seq = undef;
@@ -795,7 +794,9 @@ sub fasta_len_filter {
 		$seq = <IN>;
 		chomp $seq;
 		$seq =~ s/\s+//g;
-		if (length($seq) >= $len) {
+		my $len = length($seq);
+		# filter read between minrl and maxrl
+		if ($len >= $minrl and $len <= $maxrl) {
 			print OUT $id, $seq, "\n";
 		}
 	}
