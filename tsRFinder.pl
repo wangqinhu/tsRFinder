@@ -197,6 +197,7 @@ sub stop {
 sub clean_data {
 
 	system("rm -rf $label/sRNA.fq 1>/dev/null 2>&1");
+	system("rm -rf $label/refseq.fa 1>/dev/null 2>&1");
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
@@ -410,6 +411,11 @@ sub run_tRNAscanSE {
 			print_log("tRNAscan-SE is not correctly installed, e.g. PERL5LIB is not correctly set.");
 			exit;
 		} else {
+			# Decompress gzipped reference genome sequence
+			if ($refseq =~ /.gz$/) {
+					system("gzip -dc $refseq > $label/refseq.fa");
+					$refseq = "$label/refseq.fa";
+			}
 			if ($mode eq "debug") {
 				system("tRNAscan-SE -f $label/$ss_file $refseq");
 			} else {
