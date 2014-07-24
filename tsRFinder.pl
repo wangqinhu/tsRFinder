@@ -283,8 +283,13 @@ sub set_env_tmp {
 	# If tsRFinder.pl is a link file
 	my $fapp = $dir . "/" . "$app";
 	if ( -l $fapp) {
-		print_log("Check doc/manual.pdf to see how to do this.");
-		exit;
+		# read the real file's path
+		my $full = `readlink $fapp`;
+		chomp $full;
+		print_log("$fapp -> $full");
+		print_log("Using $full to determine environment tsR_dir");
+		# read the real file's directory name
+		$dir = `dirname $full`;
 	}
 
 	# For abs path
