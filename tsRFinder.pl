@@ -1286,35 +1286,27 @@ sub write_report {
 	print_log("---------\n");
 
 	# tRNA summary
-	my $ntrna = `grep '>' $label/tRNA.fa | wc -l`;
-	$ntrna =~ s/\s//g;
-	chomp $ntrna;
+	my $ntrna = number_of_trna("$label/tRNA.fa");
 	print_log("*     tRNA seq : $label/tRNA.fa");
 	print_log("         Total : $ntrna");
 
 	# sRNA summary
-	my ($st, $su) = read_stat("$label/sRNA.fa");
-	my ($tt, $tu) = read_stat("$label/tRNA.read.fa");
+	my ($srna_total, $srna_unique) = read_stat("$label/sRNA.fa");
 	print_log("*   sRNA reads : $label/sRNA.fa");
-	print_log("         Total : $st");
-	print_log("        Unique : $su");
+	print_log("         Total : $srna_total");
+	print_log("        Unique : $srna_unique");
 
 	# tRNA reads summary
+	my ($tread_total, $tread_unique) = read_stat("$label/tRNA.read.fa");
 	print_log("*   tRNA reads : $label/tRNA.read.fa");
-	print_log("         Total : $tt");
-	print_log("        Unique : $tu");
+	print_log("         Total : $tread_total");
+	print_log("        Unique : $tread_unique");
 
 	# tsRNA seq summary
-	my $ntsrna = `cat $label/tsRNA.seq | wc -l`;
-	$ntsrna =~ s/\s//g;
-	chomp $ntsrna;
-	my $nr = '!a[$2]++';
-	my $uts = `awk '$nr' $label/tsRNA.seq | wc -l`;
-	$uts =~ s/\s//g;
-	chomp $uts;
+	my ($ntsrna, $utsrna) = number_of_tsRNA("$label/tsRNA.seq");
 	print_log("*    tsRNA seq : $label/tsRNA.seq");
 	print_log("         Total : $ntsrna");
-	print_log("        Unique : $uts");
+	print_log("        Unique : $utsrna");
 
 	# tsRNA report
 	print_log("* tsRNA report : $label/tsRNA.report.xls");
@@ -1335,9 +1327,26 @@ sub write_report {
 	print_log("* tsRNA family : $label/tsRNA.fam");
 
 	# statistical measurement
-	stat_index();
+	my ($sen, $spe, $acc) = stat_index();
+	print_log("* Stat. by BDI :");
+	print_log("   Sensitivity : $sen");
+	print_log("   Specificity : $spe");
+	print_log("      Accuracy : $acc\n");
 
 	print_log("---------");
+
+}
+
+# Number of tRNA
+sub number_of_trna {
+
+	my ($file) = @_;
+
+	my $ntrna = `grep '>' $file | wc -l`;
+	$ntrna =~ s/\s//g;
+	chomp $ntrna;
+
+	return $ntrna;
 
 }
 
@@ -1356,6 +1365,23 @@ sub read_stat {
 	$unique =~ s/\s//g;
 
 	return ($total, $unique);
+
+}
+
+# Number of tsRNA
+sub number_of_tsRNA {
+
+	my ($file) = @_;
+
+	my $nts = `cat $file | wc -l`;
+	$nts =~ s/\s//g;
+	chomp $nts;
+	my $nr = '!a[$2]++';
+	my $uts = `awk '$nr' $file | wc -l`;
+	$uts =~ s/\s//g;
+	chomp $uts;
+
+	return ($nts, $uts);
 
 }
 
@@ -1432,10 +1458,7 @@ sub stat_index {
 	$spe = format_percent($spe,4);
 	$acc = format_percent($acc,4);
 
-	print_log("* Stat. by BDI :");
-	print_log("   Sensitivity : $sen");
-	print_log("   Specificity : $spe");
-	print_log("      Accuracy : $acc\n");
+	return ($sen, $spe, $acc);
 
 }
 
