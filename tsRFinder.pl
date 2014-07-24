@@ -246,6 +246,13 @@ sub create_directory {
 		exit;
 	}
 
+	# In case people mistyped /usr /bin /local /disk /www /var and (/)etc.
+	if ( $label =~ /^\S{0,}\s{0,}\// ) {
+		print "Your label $label is not allowed!\n";
+		print "Please DO NOT use '/' in your label for security\n";
+		exit;
+	}
+
 	if ( -e "$label" ) {
 		print "$label exist, remove it? [N/y] ";
 		my $answer = <>;
