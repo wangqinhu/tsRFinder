@@ -582,7 +582,7 @@ sub format_reads {
 		# Build a clean sRNA reads from raw data
 		process_raw($file);
 		# Format fasta file required by tsRFinder
-		format_fasta("$label/_raw/sRNA.fa", "$label/sRNA.fa");
+		format_fasta("$label/_raw/sRNA.fa", "$label/sRNA.raw.fa");
 	# For fasta format
 	} elsif ($file_type eq "fa") {
 		my $fasta = check_fasta($file);
@@ -590,13 +590,15 @@ sub format_reads {
 			system("cp $file $label/sRNA.fa");
 		} else {
 			# Format fasta file required by tsRFinder
-			format_fasta("$file", "$label/sRNA.fa");
+			format_fasta("$file", "$label/sRNA.raw.fa");
 		}
 	# If not a fastq or fasta file
 	} else {
 		print_log("Exit: unknown filetype detected! $file ");
 		exit;
 	}
+
+	norm_by_rpm("$label/sRNA.raw.fa","$label/sRNA.fa");
 
 }
 
@@ -675,6 +677,30 @@ sub format_fasta {
 			} else {
 				print OUT $_;
 			}
+		}
+	}
+	close IN;
+	close OUT;
+
+}
+
+# Normalization reads by rpm (reads per million)
+sub norm_by_rpm {
+
+	my ($raw, $rpm) = @_;
+
+	my ($total, $unique) = read_stat($raw);
+	open (IN, $raw) or die "Cannot open file $raw: $!\n";
+	open (OUT, ">$rpm") or die "Cannot open file $rpm: $!\n";
+	while (<IN>) {
+		if (/^(\>\S+\_)(\d+)/) {
+			my $leader = $1;
+			my $num = $2;
+			# Do normalization, if read num = 0, force to 1
+			$num = int($num/$total*1000000 + 1);
+			print OUT $leader, $num, "\n";
+		} else {
+			print OUT $_;
 		}
 	}
 	close IN;
