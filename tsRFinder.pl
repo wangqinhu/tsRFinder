@@ -45,6 +45,8 @@ my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
 
+check_config();
+
 find_tsRNA();
 
 stop();
@@ -147,7 +149,7 @@ sub init {
 		}
 	}
 
-	# Check configs
+	# Parse configs
 	my $config_file = $option{c};
 	if ( $config_file ) {
 		if ( -e $config_file ) {
@@ -174,6 +176,57 @@ sub init {
 			die "Unknown  mode: $option{m}!\n";
 		}
 	}
+
+}
+
+# Check configuration
+sub check_config {
+
+	# Conflict detecting: trna (-t) and refseq (-g)
+	if (defined($trna) and defined($refseq)) {
+		print "Conflict configuration:\n";
+		print "tRNA      (-t): $trna\n";
+		print "Reference (-g): $refseq\n";
+		usage();
+	}
+
+	# Check adaptor
+	if ($adaptor =~ /[^ATCG]+/i) {
+		print "Adaptor should be nucleotide sequence!\n";
+		print "But you have input a non-ATCG string.\n";
+		exit;
+	} else {
+		my $len = length($adaptor);
+		if ($len < 6) {
+			print "Adaptor should longer than 6!\n";
+			print "But you have input an adaptor with $len base(s).\n";
+			exit;
+		}
+	}
+
+	# Check numbers
+	unless ($minrl =~ /\d+/) {
+		print "Min read length (-n): expect numeric input!\n";
+		exit;
+	}
+	unless ($maxrl =~ /\d+/) {
+		print "Max read length (-x): expect numeric input!\n";
+		exit;
+	}
+	unless ($minexp =~ /\d+/) {
+		print "Min expression level (-e): expect numeric input!\n";
+		exit;
+	}
+	unless ($mat_cut =~ /\d+/) {
+		print "Mature tsRNA level cut-off (-u): expect numeric input!\n";
+		exit;
+	}
+	unless ($fam_thr =~ /\d+/) {
+		print "Small RNA family threshold (-f): expect numeric input!\n";
+		exit;
+	}
+
+	print_log("Valid input, perform analyzing ...");
 
 }
 
@@ -1940,18 +1993,18 @@ tsRFinder usage:
 
     -c  Configuration file
     -l  Label
-    -g  Reference genomic sequence
-    -t  Reference tRNA sequence
-    -s  Small RNA sequence
+    -g  Reference genomic sequence file, conflict with -t
+    -t  Reference tRNA sequence file, conflict with -g
+    -s  Small RNA sequence file
     -a  Adaptor sequence
     -n  Min read length            [defalut 18]
     -x  Max read length            [default 45]
     -e  Min expression level       [default 10]
-    -c  Mature tsRNA level cut-off [default 10]
+    -u  Mature tsRNA level cut-off [default 10]
     -f  Small RNA family threshold [default 72]
-    -w  tRNA with/without label    [defualt no]
-    -o  Output compressed tarball  [default no]
-    -m  Mode, run/debug            [defualt run]
+    -w  tRNA with/without label    [defualt no/yes]
+    -o  Output compressed tarball  [default no/yes]
+    -m  Mode, run/debug            [defualt run/debug]
     -h  Help
     -v  Version
 
