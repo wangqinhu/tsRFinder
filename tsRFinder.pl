@@ -598,7 +598,7 @@ sub format_reads {
 		exit;
 	}
 
-	norm_by_rpm("$label/sRNA.raw.fa","$label/sRNA.fa");
+	norm_by_rptm("$label/sRNA.raw.fa","$label/sRNA.fa");
 
 }
 
@@ -684,20 +684,20 @@ sub format_fasta {
 
 }
 
-# Normalization reads by rpm (reads per million)
-sub norm_by_rpm {
+# Normalization reads by rptm (reads per ten million)
+sub norm_by_rptm {
 
-	my ($raw, $rpm) = @_;
+	my ($raw, $rptm) = @_;
 
 	my ($total, $unique) = read_stat($raw);
 	open (IN, $raw) or die "Cannot open file $raw: $!\n";
-	open (OUT, ">$rpm") or die "Cannot open file $rpm: $!\n";
+	open (OUT, ">$rptm") or die "Cannot open file $rptm: $!\n";
 	while (<IN>) {
 		if (/^(\>\S+\_)(\d+)/) {
 			my $leader = $1;
 			my $num = $2;
 			# Do normalization, if read num = 0, force to 1
-			$num = int($num/$total*1000000 + 1);
+			$num = int($num/$total*10000000 + 1);
 			print OUT $leader, $num, "\n";
 		} else {
 			print OUT $_;
