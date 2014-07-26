@@ -40,6 +40,7 @@ my $adaptor  = $option{a} || $config{"adaptor"};
 my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
 my $minexp   = $option{e} || $config{"min_expression_level"} || 10;
+my $mat_cut  = $option{u} || $config{"mature_cut_off"} || "10";
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
@@ -91,7 +92,7 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("m:c:l:g:t:s:a:n:x:e:f:w:o:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:hv", \%option) or die "$!\n" . usage();
 
 	# Defualt mode: run
 	unless ($option{m}) {
@@ -1200,6 +1201,15 @@ sub define_tsRNA {
 		my @mature3 = sort by_tmap_num @map3;
 		my ($srna3) = $mature3[0];
 
+		# Mature tsRNA expression level filter
+		my $mat_filter = 0;
+		if (defined($srna5) and defined($srna3)) {
+			if ($srna5->{"num"} < $mat_cut and $srna3->{"num"} < $mat_cut) {
+				$mat_filter = 1;
+			}
+		}
+		next if $mat_filter == 1;
+
 		# Output basic information
 		print OUT "<tmap", "\n";
 		print OUT $seq{$refid}, "\t$refid\n";
@@ -1937,6 +1947,7 @@ tsRFinder usage:
     -n  Min read length            [defalut 18]
     -x  Max read length            [default 45]
     -e  Min expression level       [default 10]
+    -c  Mature tsRNA level cut-off [default 10]
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
     -o  Output compressed tarball  [default no]
