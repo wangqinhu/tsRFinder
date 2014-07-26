@@ -39,6 +39,7 @@ my $srna     = $option{s} || $config{"sRNA"};
 my $adaptor  = $option{a} || $config{"adaptor"};
 my $minrl    = $option{n} || $config{"min_read_length"} || 18;
 my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
+my $minexp   = $option{e} || $config{"min_expression_level"} || 10;
 my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
@@ -90,7 +91,7 @@ sub find_tsRNA {
 sub init {
 
 	# Options
-	getopts("m:c:l:g:t:s:a:n:x:f:w:o:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:e:f:w:o:hv", \%option) or die "$!\n" . usage();
 
 	# Defualt mode: run
 	unless ($option{m}) {
@@ -696,11 +697,13 @@ sub norm_by_rptm {
 		if (/^(\>\S+\_)(\d+)/) {
 			my $leader = $1;
 			my $num = $2;
+			my $read = <IN>;
 			# Do normalization, if read num = 0, force to 1
 			$num = int($num/$total*10000000 + 1);
-			print OUT $leader, $num, "\n";
-		} else {
-			print OUT $_;
+			if ($num >= $minexp) {
+				print OUT $leader, $num, "\n";
+				print OUT $read;
+			}
 		}
 	}
 	close IN;
@@ -1933,6 +1936,7 @@ tsRFinder usage:
     -a  Adaptor sequence
     -n  Min read length            [defalut 18]
     -x  Max read length            [default 45]
+    -e  Min expression level       [default 10]
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [defualt no]
     -o  Output compressed tarball  [default no]
