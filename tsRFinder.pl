@@ -124,7 +124,19 @@ sub init {
 
 	# Check inputs
 	if ( defined($option{c}) ) {
-		start_log();
+		if ( -e $option{c} ) {
+			unless ( -d $option{c} ) {
+				start_log();
+				print_log("Parsing configuration file $option{c}");
+				parse_config($option{c});
+			} else {
+				print_log("$option{c} is a directory!");
+				exit;
+			}
+		} else {
+			print_log("Configuration file $option{c} does not exist!");
+			exit;
+		}
 	} else {
 		if ( defined($option{s}) ) {
 			if ( defined($option{t}) or defined($option{g})) {
@@ -146,18 +158,6 @@ sub init {
 		} else {
 			print "No sRNA file specified!\n";
 			usage();
-		}
-	}
-
-	# Parse configs
-	my $config_file = $option{c};
-	if ( $config_file ) {
-		if ( -e $config_file ) {
-			print_log("Parsing configuration file $config_file");
-			parse_config($config_file);
-		} else {
-			print_log("Configuration file $config_file does not exist!");
-			exit;
 		}
 	}
 
@@ -1997,14 +1997,14 @@ tsRFinder usage:
     -t  Reference tRNA sequence file, conflict with -g
     -s  Small RNA sequence file
     -a  Adaptor sequence
-    -n  Min read length            [defalut 18]
+    -n  Min read length            [default 18]
     -x  Max read length            [default 45]
     -e  Min expression level       [default 10]
     -u  Mature tsRNA level cut-off [default 10]
     -f  Small RNA family threshold [default 72]
-    -w  tRNA with/without label    [defualt no/yes]
+    -w  tRNA with/without label    [default no/yes]
     -o  Output compressed tarball  [default no/yes]
-    -m  Mode, run/debug            [defualt run/debug]
+    -m  Mode, run/debug            [default run/debug]
     -h  Help
     -v  Version
 
