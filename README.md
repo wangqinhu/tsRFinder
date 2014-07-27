@@ -24,14 +24,14 @@ tsRFinder usage:
     -t  Reference tRNA sequence file, conflict with -g
     -s  Small RNA sequence file
     -a  Adaptor sequence
-    -n  Min read length            [defalut 18]
+    -n  Min read length            [default 18]
     -x  Max read length            [default 45]
     -e  Min expression level       [default 10]
     -u  Mature tsRNA level cut-off [default 10]
     -f  Small RNA family threshold [default 72]
-    -w  tRNA with/without label    [defualt no/yes]
+    -w  tRNA with/without label    [default no/yes]
     -o  Output compressed tarball  [default no/yes]
-    -m  Mode, run/debug            [defualt run/debug]
+    -m  Mode, run/debug            [default run/debug]
     -h  Help
     -v  Version
 
