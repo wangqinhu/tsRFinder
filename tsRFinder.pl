@@ -191,16 +191,18 @@ sub check_config {
 	}
 
 	# Check adaptor
-	if ($adaptor =~ /[^ATCG]+/i) {
-		print "Adaptor should be nucleotide sequence!\n";
-		print "But you have input a non-ATCG string.\n";
-		exit;
-	} else {
-		my $len = length($adaptor);
-		if ($len < 6) {
-			print "Adaptor should longer than 6!\n";
-			print "But you have input an adaptor with $len base(s).\n";
+	if (defined($adaptor)) {
+		if ($adaptor =~ /[^ATCG]+/i) {
+			print "Adaptor should be nucleotide sequence!\n";
+			print "But you have input a non-ATCG string.\n";
 			exit;
+		} else {
+			my $len = length($adaptor);
+			if ($len < 6) {
+				print "Adaptor should longer than 6!\n";
+				print "But you have input an adaptor with $len base(s).\n";
+				exit;
+			}
 		}
 	}
 
@@ -642,7 +644,7 @@ sub format_reads {
 	} elsif ($file_type eq "fa") {
 		my $fasta = check_fasta($file);
 		if ($fasta eq "valid") {
-			system("cp $file $label/sRNA.fa");
+			system("cp $file $label/sRNA.raw.fa");
 		} else {
 			# Format fasta file required by tsRFinder
 			format_fasta("$file", "$label/sRNA.raw.fa");
