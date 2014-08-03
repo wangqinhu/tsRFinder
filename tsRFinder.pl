@@ -603,13 +603,94 @@ sub unique_tRNA {
 
 		close TRNA;
 		close UNI;
-		print_log("$ac\t$count{$ac}");
+		my $aa = anticodon_to_aa($ac);
+		print_log("$aa\t$count{$ac}");
 	}
 	
 	# Write tRNA sequence file with sencondary structure
 	system("cat $label/_trna/* > $label/tRNA.fas");
 	# Write tRNA sequence file
 	system("awk 'NR%3' $label/tRNA.fas > $label/tRNA.fa");
+
+}
+
+# Convert anti-codon to AA
+sub anticodon_to_aa {
+
+	my ($ac) = @_;
+
+	my %aa = (
+		"TTT" => "Phe",
+		"TTC" => "Phe",
+		"TTA" => "Leu",
+		"TTG" => "Leu",
+		"TCT" => "Ser",
+		"TCC" => "Ser",
+		"TCA" => "Ser",
+		"TCG" => "Ser",
+		"TAT" => "Tyr",
+		"TAC" => "Tyr",
+		"TAA" => "Stp",
+		"TAG" => "Stp",
+		"TGT" => "Cys",
+		"TGC" => "Cys",
+		"TGA" => "Stp",
+		"TGG" => "Trp",
+		"CTT" => "Leu",
+		"CTC" => "Leu",
+		"CTA" => "Leu",
+		"CTG" => "Leu",
+		"CCT" => "Pro",
+		"CCC" => "Pro",
+		"CCA" => "Pro",
+		"CCG" => "Pro",
+		"CAT" => "His",
+		"CAC" => "His",
+		"CAA" => "Gln",
+		"CAG" => "Gln",
+		"CGT" => "Arg",
+		"CGC" => "Arg",
+		"CGA" => "Arg",
+		"CGG" => "Arg",
+		"ATT" => "Ile",
+		"ATC" => "Ile",
+		"ATA" => "Ile",
+		"ATG" => "Met",
+		"ACT" => "Thr",
+		"ACC" => "Thr",
+		"ACA" => "Thr",
+		"ACG" => "Thr",
+		"AAT" => "Asn",
+		"AAC" => "Asn",
+		"AAA" => "Lys",
+		"AAG" => "Lys",
+		"AGT" => "Ser",
+		"AGC" => "Ser",
+		"AGA" => "Arg",
+		"AGG" => "Arg",
+		"GTT" => "Val",
+		"GTC" => "Val",
+		"GTA" => "Val",
+		"GTG" => "Val",
+		"GCT" => "Ala",
+		"GCC" => "Ala",
+		"GCA" => "Ala",
+		"GCG" => "Ala",
+		"GAT" => "Asp",
+		"GAC" => "Asp",
+		"GAA" => "Glu",
+		"GAG" => "Glu",
+		"GGT" => "Gly",
+		"GGC" => "Gly",
+		"GGA" => "Gly",
+		"GGG" => "Gly"
+	);
+
+	my $codon = reverse $ac;
+	$codon =~ tr/ATCG/TAGC/;
+	my $aa = "tRNA-" . $aa{$codon} . "$ac";
+
+	return $aa;
 
 }
 
