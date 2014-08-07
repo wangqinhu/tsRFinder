@@ -1484,7 +1484,12 @@ sub write_report {
 	print_log("        Unique : $utsrna");
 
 	# tsRNA report
+	my ($t5, $t3, $u5, $u3) = number_of_arms("$label/tsRNA.report.xls");
 	print_log("* tsRNA report : $label/tsRNA.report.xls");
+	print_log("  tsR-5p total : $t5");
+	print_log("  tsR-3p total : $t3");
+	print_log(" tsR-5p unique : $u5");
+	print_log(" tsR-5p unique : $u3");
 
 	# tsRNA map
 	print_log("*     Text map : $label/tsRNA.tmap");
@@ -1557,6 +1562,58 @@ sub number_of_tsRNA {
 	chomp $uts;
 
 	return ($nts, $uts);
+
+}
+
+# Number of tsR5 and tsR3 (unique)
+sub number_of_arms {
+
+	my ($file) = @_;
+
+	unless ( -e $file ) {
+		print_log("File $file does not exist!");
+		exit;
+	}
+
+	# Parse report file
+	my @tsR5 = ();
+	my @tsR3 = ();
+	my $i = 0;
+	open (IN, "$file") or die "Cannot open file $file: $!\n";
+	while (<IN>) {
+		next if (/^\#/);
+		chomp;
+		my @w = split /\t/;
+		# 5' tsR id
+		$tsR5[$i] = $w[3];
+		# 3' tsR id
+		$tsR3[$i] = $w[7];
+		$i++;
+	}
+	close IN;
+
+	# Stat 5' and 3' tsR
+	my ($tot5, $tot3) = (0, 0);
+	my %tsR5 = ();
+	my %tsR3 = ();
+	foreach my $id (@tsR5) {
+		unless ($id eq "NA") {
+			$tot5++;
+			$tsR5{$id} = 1;
+		}
+	}
+	foreach my $id (@tsR3) {
+		unless ($id eq "NA") {
+			$tot3++;
+			$tsR3{$id} = 1;
+		}
+	}
+
+	my ($uni5, $uni3) = (0, 0);
+	$uni5 = keys %tsR5;
+    $uni3 = keys %tsR3;
+
+	return ($tot5, $tot3, $uni5, $uni3); 
 
 }
 
