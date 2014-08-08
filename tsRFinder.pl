@@ -17,6 +17,7 @@ use strict;
 use warnings;
 use Env;
 use Getopt::Std;
+no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 # Environment
 my $version = '0.9';
