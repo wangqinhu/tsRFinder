@@ -56,7 +56,7 @@ stop();
 #  Subroutine
 #-------------------------------------------------------------------------------
 
-# A protocol to tsRNA prediction
+# Main process for tsRNA prediction and annotation
 sub find_tsRNA {
 
 	# Create output directory
@@ -117,7 +117,7 @@ sub init {
 		set_env_tmp();
 	}
 	chomp $tsR_dir;
-	$tsR_dir =~ s/\/\s{0,}$//;    # replace extra "/" (and spaces) someone may include in the environment
+	$tsR_dir =~ s/\/\s{0,}$//;    # remove extra "/" (and spaces) someone may include in the environment
 	unless ( -d $tsR_dir ) {
 		print "Exit: environment tsR_dir is set, but the directory is not exist!\n";
 		exit;
@@ -163,8 +163,10 @@ sub init {
 	}
 
 	# Check critical dependencies
+	# Mapping dependency: bowtie
 	check_install("bowtie-build");
 	check_install("bowtie");
+	# Graphics dependency: R
 	check_install("R");
 
 	# Indicating modes
@@ -188,6 +190,7 @@ sub check_config {
 		print "Conflict configuration:\n";
 		print "tRNA      (-t): $trna\n";
 		print "Reference (-g): $refseq\n";
+		print "You can not specify two reference sequence files, please just use one of them!\n";
 		usage();
 	}
 
@@ -254,8 +257,10 @@ sub stop {
 # Clean the temporary files
 sub clean_data {
 
+	# Do this for unzipped file
 	system("rm -rf $label/sRNA.fq 1>/dev/null 2>&1");
 	system("rm -rf $label/refseq.fa 1>/dev/null 2>&1");
+	# Clean temporary files
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
@@ -1037,19 +1042,20 @@ sub start_log {
 sub stop_log {
 
 	my $time = `date`;
+
 	print_log("\nStop Time: $time");
 
 }
 
-# Log function: output in screen and save it to log file
+# Log function: output in screen and save to log file
 sub print_log {
 
 	my ($msg) = @_;
 
-	# Standard output
+	# Screen output
 	print $msg, "\n";
 
-	# Save to log file
+	# Log output
 	open (LOG, ">>tsRFinder.log") or die "Open file tsRFinder.log failed: $!\n";
 	print LOG $msg, "\n";
 	close LOG;
@@ -1077,13 +1083,14 @@ sub map_srna {
 	my $dir_tmp = $dir . "/tmp";
 	my $dir_img = $dir . "/img";
 
-	# Building and Mapping
+	# Building database
 	print_log("Building reference ...");
 	if ($mode eq "debug") {
 		system("bowtie-build $refseq $refseqdb");
 	} else {
 		system("bowtie-build $refseq $refseqdb 1>/dev/null 2>&1");
 	}
+	# Mapping
 	print_log("Mapping ...");
 	chdir "$dir_map";
 	if ($mode eq "debug") {
@@ -2183,20 +2190,20 @@ exit;
 
   tsRFinder.pl <option>
   For example: ./tsRFinder.pl -c demo/tsR.conf
-  Type "./tsRFinder.pl -h" to see all the options.
+  Type "./tsRFinder.pl -h" to see all the options
  
 =head1 AUTHOR
 
   Qinhu Wang
   Northwest A&F University
   E-mail: wangqinhu@nwafu.edu.cn
-  
+
 =head1 HOME
 
   https://github.com/wangqinhu/tsRFinder
-  
+
 =head1 LICENSE
 
-  The MIT License.
-  
+  The MIT License
+
 =cut
