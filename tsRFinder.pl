@@ -20,7 +20,7 @@ use Getopt::Std;
 no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 # Environment
-my $version = '0.9';
+my $version = '1.0.0';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -385,7 +385,7 @@ sub tRNA_scan {
 		print_log("Using tRNA $trna");
 		my $status = check_valid_tRNA($trna);
 		if ($status == 1) {
-			print_log("The tRNA file supplied is valid");
+			print_log("Valid tRNA file found!");
 		} else {
 			print_log("The tRNA file supplied is NOT valid");
 			exit;
