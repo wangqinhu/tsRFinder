@@ -1502,7 +1502,7 @@ sub write_report {
 	print_log("  tsR-5p total : $t5");
 	print_log("  tsR-3p total : $t3");
 	print_log(" tsR-5p unique : $u5");
-	print_log(" tsR-5p unique : $u3");
+	print_log(" tsR-3p unique : $u3");
 
 	# tsRNA map
 	print_log("*     Text map : $label/tsRNA.tmap");
@@ -2135,7 +2135,7 @@ sub check_install {
 
 }
 
-# usage
+# Usage
 sub usage {
 
 print <<USAGE;
@@ -2172,7 +2172,7 @@ exit;
 
 }
 
-# version
+# Version
 sub version {
 
 print <<VERSION;
