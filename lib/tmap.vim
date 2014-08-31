@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     tsRFinder tmap
+" Language:     text map (tmap)
 " Maintainer:   Qinhu Wang <wangqinhu@nwafu.edu.cn>
-" Last Change:  Jue 30, 2014
+" Last Change:  Aug 31, 2014
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

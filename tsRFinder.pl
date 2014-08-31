@@ -230,6 +230,11 @@ sub check_config {
 	unless ($fam_thr =~ /\d+/) {
 		print "Small RNA family threshold (-f): expect numeric input!\n";
 		exit;
+	} else {
+		if ($fam_thr < 50 ) {
+			print "Small RNA family threshold is too low!\n";
+			exit;
+		}
 	}
 
 	print_log("Valid input, perform analyzing ...");
@@ -2156,9 +2161,11 @@ tsRFinder usage:
     -h  Help
     -v  Version
 
-Example:
+Examples:
 
     tsRFinder.pl -c demo/tsR.conf
+
+    tsRFinder.pl -c demo/tsR.alt.conf
 
 USAGE
 exit;

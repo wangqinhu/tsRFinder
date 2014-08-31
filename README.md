@@ -55,9 +55,11 @@ tsRFinder usage:
     -h  Help
     -v  Version
 
-Example:
+Examples:
 
     tsRFinder.pl -c demo/tsR.conf
+
+    tsRFinder.pl -c demo/tsR.alt.conf
 ```
 
 
