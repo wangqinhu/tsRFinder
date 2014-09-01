@@ -161,7 +161,6 @@ tsRFinder allows you specify inputs via a separate configuration file, as shown 
 {\footnotesize \begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black,title=Demo configuration file for tsRFinder: demo/tsR.conf]
 \begin{verbatim}
 
-mode                :  run
 label               :  Abc
 reference_genome    :  demo/genome.fa
 reference_tRNA      :
@@ -178,7 +177,7 @@ output_compressed   :  no
 \end{verbatim}
 \end{tcolorbox}}
 
-Currently we have 13 items (16 options in command line) for configuration file filling. The argument items and the inputs are separated by colon (":"). You are recommended to use the first three letters of the investigated organism as a label (e.g. Ath for \textit{Arabidopsis thaliana}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least (tsRFinder supports input in gzipped files for sRNA and reference genome, and plain ASCII text is also acceptable). If raw sequence data is used, the adaptor sequence (\emph{-a}) is required. In case a reference tRNA (\emph{-t}) is not used, leave the argument to EMPTY.
+Currently we have 12 items (16 options in command line) for configuration file filling. The argument items and the inputs are separated by colon (":"). You are recommended to use the first three letters of the investigated organism as a label (e.g. Ath for \textit{Arabidopsis thaliana}, \emph{-l} in command line option); the paths of reference genome (\emph{-g}) and small RNA (\emph{-s}) should be supplied at least (tsRFinder supports input in gzipped files for sRNA and reference genome, and plain ASCII text is also acceptable). If raw sequence data is used, the adaptor sequence (\emph{-a}) is required. In case a reference tRNA (\emph{-t}) is not used, leave the argument to EMPTY.
 
 Once the configuration file (-c) is prepared, an analysis protocol have been determined. In the demo, the configuration file is at demo/tsR.conf, typing the following in the terminal to run tsRFinder:
 
