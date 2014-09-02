@@ -32,7 +32,7 @@ my %config;
 init();
 
 # Global variables
-my $mode     = $option{m} || $config{"mode"} || "run";
+my $mode     = $option{m};
 my $label    = $option{l} || $config{"label"};
 my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
@@ -97,7 +97,7 @@ sub init {
 	# Options
 	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:hv", \%option) or die "$!\n" . usage();
 
-	# Defualt mode: run
+	# Set defualt mode
 	unless ($option{m}) {
 		$option{m} = "run";
 	}
@@ -169,7 +169,7 @@ sub init {
 	# Graphics dependency: R
 	check_install("R");
 
-	# Indicating modes
+	# Check mode
 	if ($option{m} eq "debug") {
 		print_log("tsRFinder init success: Running in debug mode");
 	} else {
