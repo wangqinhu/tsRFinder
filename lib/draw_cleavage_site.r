@@ -18,7 +18,7 @@ par(mar=c(4,1,1,0))
 # plot area
 plot(c(xleft, xright), c(ybottom, ytop), type = "n",
      xlab = "tRNA base", ylab = "",
-     main="Distribution of tRNA clevage sites",
+     main="Distribution of tRNA cleavage sites",
      axes=F
      )
 axis(side=1, labels=T,  at = seq(xmin-1,xmax+1))
