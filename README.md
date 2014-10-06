@@ -72,5 +72,5 @@ Demo
 ----
 ![animated gif demo][2]
 
-[1]: doc/manual.pdf
-[2]: doc/demo.gif
+[1]: https://raw.githubusercontent.com/wangqinhu/tsRFinder/master/doc/manual.pdf
+[2]: https://raw.githubusercontent.com/wangqinhu/tsRFinder/master/doc/demo.gif
