@@ -2,8 +2,7 @@ pdf(file="distribution.pdf", 6, 9)
 # read length file
 rls<-read.table("srna.len")
 rlt<-read.table("trna.len")
-rld[1:length(rls$V1),1]<-rls$V1
-rld[1:length(rls$V1),2]<-rlt$V2
+rld<-rlt
 rld[1:length(rls$V1),3]<-rls$V2 - rlt$V2
 # plot
 layout(c(1:3))
