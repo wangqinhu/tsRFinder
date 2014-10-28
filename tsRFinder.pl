@@ -1634,9 +1634,9 @@ sub number_of_arms {
 sub draw_distribution {
 
 	print_log("Drawing sRNA/tRNA distribution ...");
-	srna_len_stat("$label/sRNA.fa");
+	srna_stat("$label/sRNA.fa");
 	system("mv read.len srna.len");
-	srna_len_stat("$label/tRNA.read.fa");
+	srna_stat("$label/tRNA.read.fa");
 	system("mv read.len trna.len");
 	if ($mode eq "debug") {
 		system("R CMD BATCH $tsR_dir/lib/draw_distribution.r");
@@ -1647,8 +1647,8 @@ sub draw_distribution {
 
 }
 
-# Small RNA length statistics
-sub srna_len_stat {
+# Small RNA statistics
+sub srna_stat {
 
 	my ( $file ) = @_;
 
@@ -1659,19 +1659,38 @@ sub srna_len_stat {
 		$read[$_] = 0;
 	}
 
+	# read sequence
 	my $read = undef;
+	# 5' read base
+	my %base = ();
+	my @base = ("A", "T", "C", "G");
+	foreach my $i ($minrl .. $maxrl) {
+		foreach my $j (@base) {
+			$base{$i}{$j} = 0;
+		}
+	}
 	while (<IN>) {
 		if (/^\S+[\_|\||\-](\S+)/) {
 			$read = <IN>;
 			chomp $read;
+			# abundance
 			$read[length($read)] += $1;
+			# content
+			my $base1 = substr($read,0,1);
+			$base{length($read)}{$base1} += $1;
 		}
 	}
 	close IN;
 
 	open (DAT, ">read.len") or die "Cannot open file read.len: $!\n";
 	foreach ($minrl .. $maxrl) {
-		print DAT $_, "\t", $read[$_], "\n";
+		# read sequence
+		print DAT $_, "\t", $read[$_];
+		# 5' read base
+		foreach my $base (@base) {
+			print DAT "\t", $base{$_}{$base};
+		}
+		print DAT "\n";
 	}
 	close DAT;
 
