@@ -38,11 +38,11 @@ my $refseq   = $option{g} || $config{"reference_genome"};
 my $trna     = $option{t} || $config{"reference_tRNA"};
 my $srna     = $option{s} || $config{"sRNA"};
 my $adaptor  = $option{a} || $config{"adaptor"};
-my $minrl    = $option{n} || $config{"min_read_length"} || 18;
-my $maxrl    = $option{x} || $config{"max_read_length"} || 45;
-my $minexp   = $option{e} || $config{"min_expression_level"} || 10;
+my $minrl    = $option{n} || $config{"min_read_length"} || "18";
+my $maxrl    = $option{x} || $config{"max_read_length"} || "45";
+my $minexp   = $option{e} || $config{"min_expression_level"} || "10";
 my $mat_cut  = $option{u} || $config{"mature_cut_off"} || "10";
-my $fam_thr  = $option{f} || $config{"family_threshold"} || 72;
+my $fam_thr  = $option{f} || $config{"family_threshold"} || "72";
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
 
@@ -93,6 +93,11 @@ sub find_tsRNA {
 
 # Init tsRFinder
 sub init {
+
+	# Check number of arguments
+	if ($#ARGV == -1) {
+		usage();
+	}
 
 	# Options
 	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:hv", \%option) or die "$!\n" . usage();
@@ -182,7 +187,7 @@ sub init {
 
 }
 
-# Check configuration
+# Check arguments
 sub check_config {
 
 	# Conflict detecting: trna (-t) and refseq (-g)
@@ -198,7 +203,8 @@ sub check_config {
 	if (defined($adaptor)) {
 		if ($adaptor =~ /[^ATCG]+/i) {
 			print "Adaptor should be nucleotide sequence!\n";
-			print "But you have input a non-ATCG string.\n";
+			print "But you have input a non-ATCG string:\n";
+			print "$adaptor\n";
 			exit;
 		} else {
 			my $len = length($adaptor);
@@ -211,28 +217,57 @@ sub check_config {
 	}
 
 	# Check numbers
-	unless ($minrl =~ /\d+/) {
+
+	# min read length and max read length
+	unless ($minrl =~ /^\d+$/) {
 		print "Min read length (-n): expect numeric input!\n";
+		print "Input value: $minrl\n";
 		exit;
 	}
-	unless ($maxrl =~ /\d+/) {
+	unless ($maxrl =~ /^\d+$/) {
 		print "Max read length (-x): expect numeric input!\n";
+		print "Input value: $maxrl\n";
 		exit;
 	}
-	unless ($minexp =~ /\d+/) {
+	if ( $minrl >= 15 && $minrl <=50 ) {
+		if ( $maxrl >= 15 or $maxrl <=50 ) {
+			if ( $minrl >= $maxrl ) {
+				print "min_read_length larger than max_read_length:\n";
+				print "min: $minrl\n";
+				print "max: $maxrl\n";
+				exit;
+			}
+		} else {
+			print "max_read_length less than 15 or more than 50!\n";
+		}
+	} else {
+		print "min_read_length less than 15 or more than 50!\n";
+		exit;
+	}
+
+	# min expression level
+	unless ($minexp =~ /^\d+$/) {
 		print "Min expression level (-e): expect numeric input!\n";
+		print "Input value: $minexp\n";
 		exit;
 	}
-	unless ($mat_cut =~ /\d+/) {
+
+	# mature tsRNA level threshold
+	unless ($mat_cut =~ /^\d+$/) {
 		print "Mature tsRNA level cut-off (-u): expect numeric input!\n";
+		print "Input value: $mat_cut\n";
 		exit;
 	}
-	unless ($fam_thr =~ /\d+/) {
+
+	# family threshold
+	unless ($fam_thr =~ /^\d+$/) {
 		print "Small RNA family threshold (-f): expect numeric input!\n";
+		print "Input value: $fam_thr\n";
 		exit;
 	} else {
 		if ($fam_thr < 50 ) {
 			print "Small RNA family threshold is too low!\n";
+			print "Input value: $fam_thr\n";
 			exit;
 		}
 	}
@@ -895,21 +930,7 @@ sub process_raw {
 	# We recommend the reads length is between 15-50 nt
 	# 18-30 nt is OK but may lose some large tsRNA reads
 	print_log("Remove reads length less than 15 or more than 50 ...");
-	if ( $minrl >= 15 && $minrl <=50 ) {
-		if ( $maxrl >= 15 or $maxrl <=50 ) {
-			if ( $minrl <= $maxrl ) {
-				fasta_len_filter();
-			} else {
-				print_log("min_read_length larger than max_read_length, please check your configuration file!\n");
-				exit;
-			}
-		} else {
-			print_log("max_read_length less than 15 or more than 50!");
-		}
-	} else {
-		print_log("min_read_length less than 15 or more than 50!");
-		exit;
-	}
+	fasta_len_filter();
 	
 	# Collapse the fasta sequence to generate a non-redundant fasta file	
 	print_log("Collapsing ...");
