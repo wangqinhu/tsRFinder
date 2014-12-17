@@ -268,7 +268,8 @@ sub check_config {
 		if ($fam_thr < 50 ) {
 			print "Small RNA family threshold is too low!\n";
 			print "Input value: $fam_thr\n";
-			exit;
+			print "Small RNA classification function OFF\n";
+			$fam_thr = "off";
 		}
 	}
 
@@ -1538,7 +1539,11 @@ sub write_report {
 	print_log("       Profile : $label/cleavage_profile.pdf");
 
 	# tRNA family
-	print_log("* tsRNA family : $label/tsRNA.fam");
+	if ($fam_thr eq "off") {
+		print_log("* tsRNA family : off");
+	} else {
+		print_log("* tsRNA family : $label/tsRNA.fam");
+	}
 
 	# statistical measurement
 	my ($sen, $spe, $acc) = stat_index();
@@ -1981,6 +1986,7 @@ sub cleavage_pattern {
 # Class tsRNA
 sub srna_family {
 
+	return if $fam_thr eq "off";
 	my $file = "$label/tsRNA.seq";
 	my @nwalign = ("nwalign", "nwalign_linux32", "nwalign_linux64");
 	my $nwalign = $nwalign[ os_index() ];
