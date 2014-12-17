@@ -32,6 +32,8 @@ my %config;
 init();
 
 # Global variables
+# Priority: option > config > default
+# If zero is specified, using default when available
 my $mode     = $option{m};
 my $label    = $option{l} || $config{"label"};
 my $refseq   = $option{g} || $config{"reference_genome"};
@@ -217,18 +219,18 @@ sub check_config {
 	}
 
 	# Check numbers
-
 	# min read length and max read length
 	unless ($minrl =~ /^\d+$/) {
-		print "Min read length (-n): expect numeric input!\n";
+		print "Min read length (-n): expect postive integer!\n";
 		print "Input value: $minrl\n";
 		exit;
 	}
 	unless ($maxrl =~ /^\d+$/) {
-		print "Max read length (-x): expect numeric input!\n";
+		print "Max read length (-x): expect postive integer!\n";
 		print "Input value: $maxrl\n";
 		exit;
 	}
+	# 15 <= min <= max <= 50
 	if ( $minrl >= 15 && $minrl <=50 ) {
 		if ( $maxrl >= 15 or $maxrl <=50 ) {
 			if ( $minrl >= $maxrl ) {
@@ -247,21 +249,22 @@ sub check_config {
 
 	# min expression level
 	unless ($minexp =~ /^\d+$/) {
-		print "Min expression level (-e): expect numeric input!\n";
+		print "Min expression level (-e): expect postive integer!\n";
 		print "Input value: $minexp\n";
 		exit;
 	}
 
 	# mature tsRNA level threshold
 	unless ($mat_cut =~ /^\d+$/) {
-		print "Mature tsRNA level cut-off (-u): expect numeric input!\n";
+		print "Mature tsRNA level cut-off (-u): expect postive integer!\n";
 		print "Input value: $mat_cut\n";
 		exit;
 	}
 
 	# family threshold
+	# above 50 take effects, below 50 will disable classification function
 	unless ($fam_thr =~ /^\d+$/) {
-		print "Small RNA family threshold (-f): expect numeric input!\n";
+		print "Small RNA family threshold (-f): expect postive integer!\n";
 		print "Input value: $fam_thr\n";
 		exit;
 	} else {
