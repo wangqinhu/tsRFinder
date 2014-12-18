@@ -29,6 +29,9 @@ Finally, please add tsR_dir as an environment variable:
     echo export tsR_dir="/the/path/of/tsRFinder" >> $HOME/.bashrc
     source ~/.bashrc
 
+If you want to run tsRFinder as a system command, create a soft link for it:
+
+	ln -s `pwd`/tsRFinder/tsRFinder.pl /usr/local/bin/
 
 Usage
 -----
