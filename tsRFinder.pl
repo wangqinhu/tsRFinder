@@ -885,8 +885,10 @@ sub norm_by_rptm {
 			my $leader = $1;
 			my $num = $2;
 			my $read = <IN>;
-			# Do normalization, if read num = 0, force to 1
-			$num = int($num/$total*10000000 + 1);
+			# Do normalization
+			$num = int($num/$total*10000000);
+			# If read num = 0, force to 1
+			$num = 1 if $num == 0;
 			if ($num >= $minexp) {
 				print OUT $leader, $num, "\n";
 				print OUT $read;
