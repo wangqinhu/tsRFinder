@@ -34,7 +34,7 @@ init();
 
 # Global variables
 # Priority: option > config > default
-# If zero is specified, using default when available
+# If zero is specified, using the default value of variable when available
 my $mode     = $option{m};
 my $label    = $option{l} || $config{"label"};
 my $refseq   = $option{g} || $config{"reference_genome"};
@@ -81,13 +81,13 @@ sub find_tsRNA {
 	# sRNA/tRNA distribution
 	draw_distribution();
 
-	# Cleavage position
+	# Cleavage position analysis
 	find_cleavage_site();
 
 	# Draw cleavage sites
 	draw_cleavage_site();
 
-	# Family
+	# Family analysis
 	srna_family();
 
 	# Write report file
@@ -98,7 +98,7 @@ sub find_tsRNA {
 # Init tsRFinder
 sub init {
 
-	# Check number of arguments
+	# Check the number of arguments
 	if ($#ARGV == -1) {
 		usage();
 	}
@@ -106,7 +106,7 @@ sub init {
 	# Options
 	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:i:hv", \%option) or die "$!\n" . usage();
 
-	# Set defualt mode
+	# Set defualt mode as run
 	unless ($option{m}) {
 		$option{m} = "run";
 	}
@@ -132,7 +132,7 @@ sub init {
 		exit;
 	}
 
-	# Check inputs
+	# Check inputs logic
 	if ( defined($option{c}) ) {
 		if ( -e $option{c} ) {
 			unless ( -d $option{c} ) {
@@ -278,6 +278,37 @@ sub check_config {
 		}
 	}
 
+	# Check switches
+	$lab_trna = lc($lab_trna);
+	$tgz = lc($tgz);
+	$inter = lc($inter);
+	# tRNA_with_label
+	unless ($lab_trna ~~ ["yes", "no"]) {
+		print "WARNING: Incorrect value for tRNA_with_label found!\n";
+		print "Configuration: tRNA_with_label or option -w should be:\n";
+		print '"yes" or "no"', "\n";
+		print "Input value: $lab_trna\n";
+		exit;
+	}
+
+	# output_compressed
+	unless ($tgz ~~ ["yes", "no"]) {
+		print "WARNING: Incorrect value for output_compressed found!\n";
+		print "Configuration: output_compressed or option -o should be:\n";
+		print '"yes" or "no"', "\n";
+		print "Input value: $tgz\n";
+		exit;
+	}
+
+	# interactive
+	unless ($inter ~~ ["yes", "no"]) {
+		print "WARNING: Incorrect value for interactive found!\n";
+		print "Configuration: interactive or option -i should be:\n";
+		print '"yes" or "no"', "\n";
+		print "Input value: $inter\n";
+		exit;
+	}
+
 	print_log("Valid input, perform analyzing ...");
 
 }
@@ -297,8 +328,8 @@ sub stop {
 	# print attention_msg if it is not empty
 	if (@attention_msg > 0) {
 		print_log("\nATTENTION");
-		for my $i (0..$#attention_msg) {
-			print_log($attention_msg[$i]);
+		foreach my $msg (@attention_msg) {
+			print_log($msg);
 		}
 	}
 

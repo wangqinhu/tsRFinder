@@ -54,6 +54,7 @@ tsRFinder usage:
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [default no/yes]
     -o  Output compressed tarball  [default no/yes]
+    -i  interactive                [default yes/no]
     -m  Mode, run/debug            [default run/debug]
     -h  Help
     -v  Version
