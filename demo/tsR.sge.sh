@@ -23,7 +23,7 @@ echo
 echo "||||||||||||||||||||||||||||||||||||||||"
 echo
 
-tsRFinder.pl -o yes -c $1
+tsRFinder.pl -i no -o yes -c $1
 
 echo
 echo "||||||||||||||||||||||||||||||||||||||||"

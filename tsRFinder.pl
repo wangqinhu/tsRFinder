@@ -24,6 +24,7 @@ my $version = '1.0.0';
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
+my @attention_msg;
 
 #-------------------------------------------------------------------------------
 #  Main
@@ -47,6 +48,7 @@ my $mat_cut  = $option{u} || $config{"mature_cut_off"} || "10";
 my $fam_thr  = $option{f} || $config{"family_threshold"} || "72";
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
+my $inter    = $option{i} || $config{"interactive"} || "yes";
 
 check_config();
 
@@ -102,7 +104,7 @@ sub init {
 	}
 
 	# Options
-	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:i:hv", \%option) or die "$!\n" . usage();
 
 	# Set defualt mode
 	unless ($option{m}) {
@@ -283,17 +285,24 @@ sub check_config {
 # Stop tsRFinder
 sub stop {
 
-	stop_log();
 	if ($mode ne "debug") {
 		clean_data();
 	} else {
-		print_log("Attention: you are in debug mode, temporary files were keeped!");
+		attention_msg("You enabled debug mode, temporary files were keeped");
 	}
 
 	# Compress output files
 	compress_output();
 
-	print "Finished!\n";
+	# print attention_msg if it is not empty
+	if (@attention_msg > 0) {
+		print_log("\nATTENTION");
+		for my $i (0..$#attention_msg) {
+			print_log($attention_msg[$i]);
+		}
+	}
+
+	stop_log();
 	exit;
 
 }
@@ -347,31 +356,52 @@ sub parse_config {
 # Create the output directory
 sub create_directory {
 
+	# Deal with build-in directory conflict
 	if ( $label ~~ ["tsRFinder", "demo", "lib", "doc"] ) {
 		print "Your label setting conflict with tsRFinder build-in directory, please change to another label!\n";
 		print "Label tsRFinder, demo, lib and doc are not allowed!\n";
 		exit;
 	}
 
-	# In case people mistyped /usr /bin /local /disk /www /var and (/)etc.
+	# In case people mistyped /usr /bin /local /disk /www /var and (/) etc.
 	if ( $label =~ /^\S{0,}\s{0,}\// ) {
 		print "Your label $label is not allowed!\n";
 		print "Please DO NOT use '/' in your label for security\n";
 		exit;
 	}
 
+	# If specified directory exist
 	if ( -e "$label" ) {
-		print "$label exist, remove it? [N/y] ";
-		my $answer = <>;
-		chomp $answer;
-		if ($answer ~~ ["Y", "y", "YES", "yes"] ) {
-			print_log("Directory $label will be removed now!");
-			system("rm -rf $label");
+		if ($inter eq "yes") {
+			print "WARNING: $label exist, remove it? [N/y] ";
+			my $answer = <>;
+			chomp $answer;
+			if (lc($answer) ~~ ["y", "yes"] ) {
+				print_log("Directory $label will be removed now!");
+				if ($mode eq "debug") {
+					system("rm -rf $label");
+				} else {
+					system("rm -rf $label 1>/dev/null 2>&1");
+				}
+			} else {
+				print_log("Exit: directory $label exists");
+				exit;
+			}
 		} else {
-			print_log("Exit: directory $label exists");
-			exit;
+			print_log("Non-interactive $mode mode enabled");
+			my $ctime = `date +%Y%m%d.%H%M%S`;
+			chomp $ctime;
+			my $backup = $label . "." . $ctime;
+			if ($mode eq "debug") {
+				system("mv $label $backup");
+			} else {
+				system("mv $label $backup 1>/dev/null 2>&1");
+			}
+			attention_msg("Old directory $label was moved to $backup");
 		}
 	}
+
+	# Create directory
 	system("mkdir $label");
 
 }
@@ -2164,8 +2194,16 @@ sub compress_output {
 			system("tar -czf $label.tgz $label/ 1>/dev/null 2>&1");
 			system("rm -rf $label/");
 		}
-		print "All output files are in $label.tgz now.\n";
+		attention_msg("All output files are in $label.tgz");
 	}
+
+}
+
+# End Information
+sub attention_msg {
+
+	my ($msg) = @_;
+	push @attention_msg, $msg;
 
 }
 
@@ -2208,6 +2246,7 @@ tsRFinder usage:
     -f  Small RNA family threshold [default 72]
     -w  tRNA with/without label    [default no/yes]
     -o  Output compressed tarball  [default no/yes]
+    -i  interactive                [default yes/no]
     -m  Mode, run/debug            [default run/debug]
     -h  Help
     -v  Version
