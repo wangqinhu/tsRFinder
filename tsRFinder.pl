@@ -316,6 +316,8 @@ sub check_config {
 # Stop tsRFinder
 sub stop {
 
+	stop_log();
+
 	if ($mode ne "debug") {
 		clean_data();
 	} else {
@@ -327,13 +329,12 @@ sub stop {
 
 	# print attention_msg if it is not empty
 	if (@attention_msg > 0) {
-		print_log("\nATTENTION");
+		print "\nATTENTION\n";
 		foreach my $msg (@attention_msg) {
-			print_log($msg);
+			print "$msg\n";
 		}
 	}
 
-	stop_log();
 	exit;
 
 }
@@ -2223,7 +2224,8 @@ sub compress_output {
 			system("tar -czf $label.tgz $label/");
 		} else {
 			system("tar -czf $label.tgz $label/ 1>/dev/null 2>&1");
-			system("rm -rf $label/");
+			# In this case, remove the entire directory, only keep the tarball
+			system("rm -rf $label/ 1>/dev/null 2>&1");
 		}
 		attention_msg("All output files are in $label.tgz");
 	}
