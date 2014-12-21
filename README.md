@@ -68,7 +68,7 @@ Examples:
     tsRFinder.pl -c demo/tsR.alt.conf
 ```
 
-To submit tsRFinder job on a cluster managed with sun grid engine (sge), see [demo/tsR.sge.sh][1]
+To submit tsRFinder job on a cluster managed with sun grid engine (sge), see [demo/tsR.sge.sh][3]
 
 Example:
 
@@ -86,3 +86,4 @@ Demo
 
 [1]: https://raw.githubusercontent.com/wangqinhu/tsRFinder/master/doc/manual.pdf
 [2]: https://raw.githubusercontent.com/wangqinhu/tsRFinder/master/doc/demo.gif
+[3]: https://raw.githubusercontent.com/wangqinhu/tsRFinder/master/demo/tsR.sge.sh
