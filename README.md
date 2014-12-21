@@ -36,6 +36,8 @@ If you want to run tsRFinder as a system command, create a soft link for it:
 Usage
 -----
 
+A typical tsRFinder job can be easily finished on a modern MacBook (running OS X) or laptop (running Linux), see the following usage and examples.
+
 ```
 tsRFinder usage:
 
@@ -65,6 +67,12 @@ Examples:
 
     tsRFinder.pl -c demo/tsR.alt.conf
 ```
+
+To submit tsRFinder job on a cluster managed with sun grid engine (sge), see [demo/tsR.sge.sh][1]
+
+Example:
+
+	qsub demo/tsR.sge.sh demo/tsR.conf
 
 
 Manual
