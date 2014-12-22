@@ -13,11 +13,9 @@ if [ $# != 1 ] ; then
 	exit
 fi
 
-echo -n "Running on: "
-hostname
-echo "SGE job id: $JOB_ID"
-echo -n "Begin time: "
-date
+echo Running on: `hostname`
+echo SGE job id: $JOB_ID
+echo Begin time: `date`
 
 echo
 echo "||||||||||||||||||||||||||||||||||||||||"
@@ -29,5 +27,4 @@ echo
 echo "||||||||||||||||||||||||||||||||||||||||"
 echo
 
-echo -n "End time: "
-date
+echo End time: `date`
