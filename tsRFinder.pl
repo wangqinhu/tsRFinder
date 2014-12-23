@@ -46,6 +46,7 @@ my $maxrl    = $option{x} || $config{"max_read_length"} || "45";
 my $minexp   = $option{e} || $config{"min_expression_level"} || "10";
 my $mat_cut  = $option{u} || $config{"mature_cut_off"} || "10";
 my $fam_thr  = $option{f} || $config{"family_threshold"} || "72";
+my $norm     = $option{d} || $config{"method_normalization"} || "rptm";
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
 my $inter    = $option{i} || $config{"interactive"} || "yes";
@@ -104,7 +105,7 @@ sub init {
 	}
 
 	# Options
-	getopts("m:c:l:g:t:s:a:n:x:e:u:f:w:o:i:hv", \%option) or die "$!\n" . usage();
+	getopts("m:c:l:g:t:s:a:n:x:e:u:f:d:w:o:i:hv", \%option) or die "$!\n" . usage();
 
 	# Set defualt mode as run
 	unless ($option{m}) {
@@ -278,6 +279,16 @@ sub check_config {
 		}
 	}
 
+	# Check normalization method
+	$norm = lc($norm);
+	unless ($norm ~~ ["rptm", "rpm", "no"]) {
+		print "WARNING: Unknow normalization method found!\n";
+		print "Configuration: method_normalization or option -d should be:\n";
+		print '"rptm", "rpm" or "no"', "\n";
+		print "Input value: $norm\n";
+		exit;
+	}
+
 	# Check switches
 	$lab_trna = lc($lab_trna);
 	$tgz = lc($tgz);
@@ -349,6 +360,7 @@ sub clean_data {
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
+	system("rm -rf $label/sRNA.fn");
 	unless ($trna) {
 		system("rm $label/trna.ss");
 	}
@@ -848,7 +860,15 @@ sub format_reads {
 		exit;
 	}
 
-	norm_by_rptm("$label/sRNA.raw.fa","$label/sRNA.fa");
+	# Do small RNA normalization
+	if ($norm eq "no") {
+		system("cp $label/sRNA.raw.fa $label/sRNA.fn");
+	} else {
+		normalization("$label/sRNA.raw.fa","$label/sRNA.fn");
+	}
+
+	# Filter by min_expression_level
+	min_exp_filter("$label/sRNA.fn", "$label/sRNA.fa");
 
 }
 
@@ -934,23 +954,59 @@ sub format_fasta {
 
 }
 
-# Normalization reads by rptm (reads per ten million)
-sub norm_by_rptm {
+# Normalization reads
+# by rptm: reads per ten million
+# or rpm : reads per million
+# or no  : disable
+sub normalization {
 
-	my ($raw, $rptm) = @_;
+	my ($raw, $normed) = @_;
+
+	my $factor = undef;
+	if ($norm eq "rptm") {
+		$factor = 10000000;
+	} elsif ($norm eq "rpm") {
+		$factor = 1000000;
+	} else {
+		print_log("Unknow method for small RNA normalization found!");
+		print_log("Using default method: rptm");
+		attention_msg("Method for small RNA normalization: rptm");
+		$factor = 10000000;
+	}
 
 	my ($total, $unique) = read_stat($raw);
 	open (IN, $raw) or die "Cannot open file $raw: $!\n";
-	open (OUT, ">$rptm") or die "Cannot open file $rptm: $!\n";
+	open (OUT, ">$normed") or die "Cannot open file $normed: $!\n";
 	while (<IN>) {
 		if (/^(\>\S+\_)(\d+)/) {
 			my $leader = $1;
 			my $num = $2;
 			my $read = <IN>;
 			# Do normalization
-			$num = int($num/$total*10000000);
+			$num = int($num/$total * $factor + 0.5);
 			# If read num = 0, force to 1
 			$num = 1 if $num == 0;
+			print OUT $leader, $num, "\n";
+			print OUT $read;
+		}
+	}
+	close IN;
+	close OUT;
+
+}
+
+# Min expression level filter
+sub min_exp_filter {
+
+	my ($fn, $fa) = @_;
+
+	open (IN, $fn) or die "Cannot open file $fn: $!\n";
+	open (OUT, ">$fa") or die "Cannot open file $fa: $!\n";
+	while (<IN>) {
+		if (/^(\>\S+\_)(\d+)/) {
+			my $leader = $1;
+			my $num = $2;
+			my $read = <IN>;
 			if ($num >= $minexp) {
 				print OUT $leader, $num, "\n";
 				print OUT $read;
@@ -2270,17 +2326,18 @@ tsRFinder usage:
     -l  Label
     -g  Reference genomic sequence file, conflict with -t
     -t  Reference tRNA sequence file, conflict with -g
-    -s  Small RNA sequence file
+    -s  sRNA sequence file
     -a  Adaptor sequence
-    -n  Min read length            [default 18]
-    -x  Max read length            [default 45]
-    -e  Min expression level       [default 10]
-    -u  Mature tsRNA level cut-off [default 10]
-    -f  Small RNA family threshold [default 72]
-    -w  tRNA with/without label    [default no/yes]
-    -o  Output compressed tarball  [default no/yes]
-    -i  interactive                [default yes/no]
-    -m  Mode, run/debug            [default run/debug]
+    -n  Min read length               [default 18]
+    -x  Max read length               [default 45]
+    -e  Min expression level          [default 10]
+    -u  Mature tsRNA level cut-off    [default 10]
+    -f  sRNA family threshold         [default 72]
+    -d  Method for sRNA normalization [default rptm/rpm/no]
+    -w  tRNA with/without label       [default no/yes]
+    -o  Output compressed tarball     [default no/yes]
+    -i  Interactive                   [default yes/no]
+    -m  Mode, run/debug               [default run/debug]
     -h  Help
     -v  Version
 
