@@ -179,7 +179,6 @@ qsub demo/tsR.sge.sh demo/tsR.conf
 \end{verbatim}
 \end{tcolorbox}}
 
-
 \section{Demo}
 
 To have a quick but rough overview that how tsRFinder looks like, see the animated gif demo in "doc/demo.gif" or online.
@@ -305,7 +304,6 @@ When compressed tarball output \emph{-o yes} is enabled, all the output files we
 \emph{Note:} The range of the small RNA length exhibited here is based on the minimum (\emph{-n}) and maximum (\emph{-x}) sequence length that specified in command line or the configuration file.
 \end{figure}
 
-
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=13cm]{cleavage_profile.pdf}
@@ -355,8 +353,9 @@ Ideally, sequences from 15 - 50 nt for small RNA are recommend.
 
 \textbf{3. What's the tRNA format required for input?}
 
-You are encouraged to use reference genomic sequences since tsRFinder is capable of extracting tRNA sequences via tRNAscan-SE, removing duplicated sequences, and formatting the input. In case a manually prepared file is preferred, proceed following this format: first line, begin with "$>$", followed by label "$Abc$", and the name of tRNA "$tRNA-ProCGG1$"; second line, the sequence of tRNA; and third line, the secondary structure of tRNA, "$><$" and "$()$" both are acceptable. Be carefully in preparing this because "$>$" equals "$($" but not "$)$".\\
-Shown below is an example.
+You are encouraged to use reference genomic sequences since tsRFinder is capable of extracting tRNA sequences via tRNAscan-SE, removing duplicated sequences, and formatting the input. In case a manually prepared file is preferred, proceed following this format: first line, begin with "$>$", followed by label "$Abc$", and the name of tRNA "$tRNA-ProCGG1$"; second line, the sequence of tRNA; and third line, the secondary structure of tRNA, "$><$" and "$()$" both are acceptable. Be carefully in preparing this because "$>$" equals "$($" but not "$)$".
+
+Shown below is an example:
 
 {\scriptsize \begin{tcolorbox}[colback=blue!5!white,colframe=pink!75!black,title=tRNA example]
 \begin{verbatim}
@@ -368,8 +367,9 @@ GGCCTCGTGGTCTAGTGGTATGATTCTC [NNN] AGAGGtCCCGGGTTCGATTCCCGGTGAGGCCC
 
 \textbf{4. What's the sRNA format required for input?}
 
-You are recommended to use raw data. In case a manually prepared sRNA file is used for input, proceed following this format: first line, begin with "$>$", and the label "$Abc$", then the 7\-bit index, followed by "$\_$" (or "$|$", "$-$" and white space) and the read number; second line, the sequence of the read. One more thing, the format of sRNA data in tsRFinder is compatible with the FASTX\_TOOL kit \footnote{\url{http://hannonlab.cshl.edu/fastx_toolkit/}}, which helps you on processing the raw sequencing data.\\
-Shown below is an example.
+You are recommended to use raw data. In case a manually prepared sRNA file is used for input, proceed following this format: first line, begin with "$>$", and the label "$Abc$", then the 7\-bit index, followed by "$\_$" (or "$|$", "$-$" and white space) and the read number; second line, the sequence of the read. One more thing, the format of sRNA data in tsRFinder is compatible with the FASTX\_TOOL kit \footnote{\url{http://hannonlab.cshl.edu/fastx_toolkit/}}, which helps you on processing the raw sequencing data.
+
+Shown below is an example:
 
 {\scriptsize \begin{tcolorbox}[colback=blue!5!white,colframe=pink!75!black,title=sRNA example]
 \begin{verbatim}
@@ -380,21 +380,56 @@ AGGTGGTCAGGTAGAGAATACCAAGGCGCT
 \end{verbatim}
 \end{tcolorbox}}
 
+\textbf{5. The 'nwalign' not compatible to my operating system, what can I do?}
 
-\textbf{5. I have problems in installing tsRFinder and/or the dependencies, where can I get more help?}
+tsRFinder uses Needleman-Wunsch algorithm nwalign for small RNA alignment, with pre-building of the binaries for some of the recent OS X / Linux. If you find it not suitable for your system or want to compile it by yourself, goto lib/src directory and type 'make' to build \footnote{The gcc compiler is required. For OS X, you can install Xcode (ship with gcc)} it manually.
+
+\textbf{6. I have a lot of small RNA files, and I do not want to type them one by one, what can I do?}
+
+OK, put all the configuration files (*.conf) in a directory (say conf), and using the following script:
+
+{\scriptsize \begin{tcolorbox}[colback=blue!5!white,colframe=pink!75!black,title=demo/tsR.serial.sh]
+\begin{verbatim}
+#!/bin/bash
+
+# usage
+if [ $# != 1 ] ; then
+	echo
+	echo "Usage: $0 dirname"
+	echo " e.g.: $0 conf"
+	echo
+	exit
+fi
+
+dir=$1
+
+for file in `ls $dir/*.conf`; do
+	echo "###############################"
+	echo "# $file"
+	echo "##############################"
+	tsRFinder.pl -i no -c $file
+done
+\end{verbatim}
+\end{tcolorbox}}
+
+For example, run "demo/*.conf" like this:
+
+{\scriptsize \begin{tcolorbox}[colback=blue!5!white,colframe=pink!75!black,title=running a serials of tsRFinder]
+\begin{verbatim}
+sh demo/tsR.serial.sh demo
+\end{verbatim}
+\end{tcolorbox}}
+
+\textbf{7. I have problems in installing tsRFinder and/or the dependencies, where can I get more help?}
 
 You can access the official support website for trouble-shooting, or open new issue for tsRFinder repository on GitHub. The URL is \url{https://github.com/wangqinhu/tsRFinder/issues/new}
 
-\textbf{6. Where to report bugs?}
+\textbf{8. Where to report bugs?}
 
 Goto \url{https://github.com/wangqinhu/tsRFinder/issues/new}
 
-\textbf{7. Can we use tsRFinder for commercial purpose?}
+\textbf{9. Can we use tsRFinder for commercial purpose?}
 
 Yes. tsRFinder is free, open source software, see the MIT license.
-
-\textbf{8. The 'nwalign' not compatible to my operating system, what can I do?}
- 
-tsRFinder uses Needleman-Wunsch algorithm nwalign for small RNA alignment, with pre-building of the binaries for some of the recent OS X / Linux. If you find it not suitable for your system or want to compile it by yourself, goto lib/src directory and type 'make' to build \footnote{The gcc compiler is required. For OS X, you can install Xcode (ship with gcc)} it manually.
 
 \end{document}
