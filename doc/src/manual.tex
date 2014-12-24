@@ -291,7 +291,9 @@ Shown below is a demo summary:
 \end{verbatim}
 \end{tcolorbox}}
 
-By default, tsRFinder delivers a summary files with some basic statistics. The predicted or user applied tRNA sequence, the small RNA clean data, the tRNA reads, and the predicted tsRNA sequences are listed. A figure showing the length distributions of small RNA and tRNA reads (Figure \ref{distribution}) are included. Meanwhile, tsRFinder gives additional summary on tsRNA family, and tRNA/tsRNA expression levels (including 5' tsRNA, 3' tsRNA and their abundance), text map (tmap) showing mapping of small RNA to tRNA, graphics showing the expression level based on small RNA data, the cleavage sites, and the cleavage profile (Figure \ref{cleavage}).
+By default, tsRFinder delivers a summary files with some basic statistics. The predicted or user applied tRNA sequence ("label/tsRNA.fa"), the small RNA clean data ("label/sRNA.fa"), the tRNA reads ("label/tRNA.read.fa"), and the predicted tsRNA sequences ("label/tsRNA.seq") are listed. A figure ("label/distribution.pdf") showing the length distributions and base content of small RNA and tRNA reads (Figure \ref{distribution}) are included. Meanwhile, tsRFinder gives additional summary on tsRNA family ("label/tsRNA.fam"), and tRNA/tsRNA expression levels ("label/tsRNA.report.xls", including 5' tsRNA, 3' tsRNA and their abundance), text map (tmap, "label/tsRNA.tmap") showing mapping of small RNA to tRNA, graphics ("label/images/") showing the expression level based on small RNA data, the cleavage sites ("label/cleavage.txt"), and the cleavage profile ("label/cleavage\_profile.pdf", Figure \ref{cleavage}).
+
+Additionally, based on the base deep index ($ BDI = floor (9 \cdot \frac{X-X_{min}}{X_{max}-X_{min}}) $), we calculate and output the sensitivity, specificity and accuracy of the prediction.  These data tell the representativeness of tsRNA mature for all the tRNA reads mapped.
 
 When compressed tarball output \emph{-o yes} is enabled, all the output files were in the \emph{label}.tgz for download, including the summary list.
 
