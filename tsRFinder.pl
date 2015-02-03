@@ -197,11 +197,12 @@ sub check_config {
 
 	# Conflict detecting: trna (-t) and refseq (-g)
 	if (defined($trna) and defined($refseq)) {
-		print "Conflict configuration:\n";
-		print "tRNA      (-t): $trna\n";
-		print "Reference (-g): $refseq\n";
-		print "You can not specify two reference sequence files, please just use one of them!\n";
-		usage();
+		my $info = "Both genome and tRNA sequence are specified\n";
+		my $head = "User configuration:\n";
+		my $tline = "tRNA      (-t): $trna\n";
+		my $rline = "Reference (-g): $refseq\n";
+		my $msg = $info . $head . $tline . $rline;
+		attention_msg($msg);
 	}
 
 	# Check adaptor
