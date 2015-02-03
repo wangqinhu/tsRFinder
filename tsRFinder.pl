@@ -281,10 +281,10 @@ sub check_config {
 
 	# Check normalization method
 	$norm = lc($norm);
-	unless ($norm ~~ ["rptm", "rpm", "no"]) {
+	unless ($norm ~~ ["rptm", "rpm", "rptmm", "rpmm", "no"]) {
 		print "WARNING: Unknow normalization method found!\n";
 		print "Configuration: method_normalization or option -d should be:\n";
-		print '"rptm", "rpm" or "no"', "\n";
+		print '"rptm", "rpm" , "rptmm", "rpmm", or "no"', "\n";
 		print "Input value: $norm\n";
 		exit;
 	}
@@ -360,6 +360,7 @@ sub clean_data {
 	system("rm -rf $label/_trna*");
 	system("rm -rf $label/_raw");
 	system("rm -rf $label/_srna_map");
+	system("rm -rf $label/_genome");
 	system("rm -rf $label/sRNA.fn");
 	unless ($trna) {
 		system("rm $label/trna.ss");
@@ -967,6 +968,12 @@ sub normalization {
 		$factor = 10000000;
 	} elsif ($norm eq "rpm") {
 		$factor = 1000000;
+	} elsif ($norm eq "rptmm") {
+		$factor = 10000000;
+		$raw = unmapped_srna_filter($raw);
+	} elsif ($norm eq "rpmm") {
+		$factor = 1000000;
+		$raw = unmapped_srna_filter($raw);
 	} else {
 		print_log("Unknow method for small RNA normalization found!");
 		print_log("Using default method: rptm");
@@ -992,6 +999,52 @@ sub normalization {
 	}
 	close IN;
 	close OUT;
+
+}
+
+# Unmapped sRNA reads filter
+sub unmapped_srna_filter {
+
+	my ($file) = @_;
+	my $mappedseq = "$label/sRNA.raw.mapped.fa";
+	my $unmappedseq = "$label/sRNA.raw.unmapped.fa";
+
+	unless ( -e $file ) {
+		print_log("Small RNA file $file does not exist!");
+		exit;
+	}
+
+	unless ( -e $refseq ) {
+		print_log("You specified to normalize with mapped reads, however, there is no reference genome sequence supplied!");
+		exit;
+	}
+
+	print_log("Filtering unmapped small RNA reads ...");
+
+	# Building database
+	my $refseq_dir = "$label/_genome";
+	my $refseqdb = "$refseq_dir/refseq.fa";
+	if ($mode eq "debug") {
+		system("mkdir -p $refseq_dir");
+		system("bowtie-build $refseq $refseqdb");
+	} else {
+		system("mkdir -p $refseq_dir 1>/dev/null 2>&1");
+		system("bowtie-build $refseq $refseqdb 1>/dev/null 2>&1");
+	}
+
+	# Mapping
+	if ($mode eq "debug") {
+		system("bowtie -v 0 -k 1 -a --best --strata --al $mappedseq --un $unmappedseq $refseqdb -f $file > $refseq_dir/sRNA.map");
+	} else {
+		system("bowtie -v 0 -k 1 -a --best --strata --al $mappedseq --un $unmappedseq $refseqdb -f $file 1>/dev/null 2>&1");
+	}
+
+	if ( -e $mappedseq ) {
+		return $mappedseq;
+	} else {
+		print_log("No mapped small RNA found!");
+		exit;
+	}
 
 }
 
@@ -1217,6 +1270,7 @@ sub map_srna {
 
 	my $pwd = `pwd`;
 	chomp $pwd;
+	# local tRNA refseq
 	my $refseq = "$pwd/$label/tRNA.fa";
 	my $rnaseq = "$pwd/$label/sRNA.fa";
 
