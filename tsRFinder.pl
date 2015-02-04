@@ -21,6 +21,7 @@ no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 # Environment
 my $version = '1.0.0';
+my $status = "development";
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
@@ -188,6 +189,11 @@ sub init {
 		} else {
 			die "Unknown  mode: $option{m}!\n";
 		}
+	}
+
+	# Flag unstable development version
+	unless ($status eq "release") {
+		attention_msg("You are using a $status version of tsRFinder");
 	}
 
 }
