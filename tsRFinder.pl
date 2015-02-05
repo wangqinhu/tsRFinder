@@ -47,7 +47,7 @@ my $maxrl    = $option{x} || $config{"max_read_length"} || "45";
 my $minexp   = $option{e} || $config{"min_expression_level"} || "10";
 my $mat_cut  = $option{u} || $config{"mature_cut_off"} || "10";
 my $fam_thr  = $option{f} || $config{"family_threshold"} || "72";
-my $norm     = $option{d} || $config{"method_normalization"} || "rptm";
+my $norm     = $option{d} || $config{"method_normalization"} || "rptm.r";
 my $lab_trna = $option{w} || $config{"tRNA_with_label"} || "no";
 my $tgz      = $option{o} || $config{"output_compressed"} || "no";
 my $inter    = $option{i} || $config{"interactive"} || "yes";
@@ -288,10 +288,10 @@ sub check_config {
 
 	# Check normalization method
 	$norm = lc($norm);
-	unless ($norm ~~ ["rptm", "rpm", "rptmm", "rpmm", "no"]) {
+	unless ($norm ~~ ["rptm.r", "rpm.r", "rptm.m", "rpm.m", "no"]) {
 		print "WARNING: Unknow normalization method found!\n";
 		print "Configuration: method_normalization or option -d should be:\n";
-		print '"rptm", "rpm" , "rptmm", "rpmm", or "no"', "\n";
+		print '"rptm.r", "rpm.r" , "rptm.m", "rpm.m", or "no"', "\n";
 		print "Input value: $norm\n";
 		exit;
 	}
@@ -962,23 +962,25 @@ sub format_fasta {
 
 }
 
-# Normalization reads
-# by rptm: reads per ten million
-# or rpm : reads per million
-# or no  : disable
+# Normalization of small RNA reads
+# by rptm.r : reads per ten million of raw reads
+# or rpm.r  : reads per million of raw reads
+# by rptm.m : reads per ten million of mapped reads
+# or rpm.m  : reads per million of mapped reads
+# or no     : disable
 sub normalization {
 
 	my ($raw, $normed) = @_;
 
 	my $factor = undef;
-	if ($norm eq "rptm") {
+	if ($norm eq "rptm.r") {
 		$factor = 10000000;
-	} elsif ($norm eq "rpm") {
+	} elsif ($norm eq "rpm.r") {
 		$factor = 1000000;
-	} elsif ($norm eq "rptmm") {
+	} elsif ($norm eq "rptm.m") {
 		$factor = 10000000;
 		$raw = unmapped_srna_filter($raw);
-	} elsif ($norm eq "rpmm") {
+	} elsif ($norm eq "rpm.m") {
 		$factor = 1000000;
 		$raw = unmapped_srna_filter($raw);
 	} else {
