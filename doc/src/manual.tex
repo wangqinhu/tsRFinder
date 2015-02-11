@@ -104,8 +104,8 @@ tsRFinder usage:
 
     -c  Configuration file
     -l  Label
-    -g  Reference genomic sequence file, conflict with -t
-    -t  Reference tRNA sequence file, conflict with -g
+    -g  Reference genomic sequence file
+    -t  Reference tRNA sequence file
     -s  sRNA sequence file
     -a  Adaptor sequence
     -n  Min read length               [default 18]
@@ -113,7 +113,8 @@ tsRFinder usage:
     -e  Min expression level          [default 10]
     -u  Mature tsRNA level cut-off    [default 10]
     -f  sRNA family threshold         [default 72]
-    -d  Method for sRNA normalization [default rptm/rpm/no]
+    -d  Method for sRNA normalization [default rptm.r/no]
+        Can be rptm.r/rpm.r/rtpm.m/rptm.m/no
     -w  tRNA with/without label       [default no/yes]
     -o  Output compressed tarball     [default no/yes]
     -i  Interactive                   [default yes/no]
@@ -218,6 +219,7 @@ sRNA                :  demo/sRNA.fq.gz
 adaptor             :  TGGAATTCTCGGGTGCCAAGG
 min_read_length     :  18
 max_read_length     :  45
+method_normalization:  rptm.r
 min_expression_level:  10
 mature_cut_off      :  10
 family_threshold    :  72
@@ -245,13 +247,17 @@ To run alternative tRNA and sRNA dataset prepared yourself, typing the following
 \end{verbatim}
 \end{tcolorbox}}
 
-tsRFinder allows you specify the minimum (\emph{-n}) and maximum (\emph{-x}) length of sequence (between 15-50 nt) for processing, you may specify the minimum expression level (\emph{-e}) of the reads to increase reliability, as well as cut-off (\emph{-u}) of the expression level of mature tsRNA. In case the family members are loose, the users may increase the tsRNA family threshold (\emph{-f}) to tune it. To disable family assignment function, use a positive integer below 50. Any \emph{0} value in the options will be replaced by the default value, if have. To make small RNAs from different samples comparable, you may use "rptm" (reads per ten millions) or "rpm" (reads per millions) method for small RNA data normalization (\emph{-d}).
+tsRFinder allows you specify the minimum (\emph{-n}) and maximum (\emph{-x}) length of sequence (between 15-50 nt) for processing, you may specify the minimum expression level (\emph{-e}) of the reads to increase reliability, as well as cut-off (\emph{-u}) of the expression level of mature tsRNA. In case the family members are loose, the users may increase the tsRNA family threshold (\emph{-f}) to tune it. To disable family assignment function, use a positive integer below 50. Any \emph{0} value in the options will be replaced by the default value, if have. To make small RNAs from different samples comparable, you may use "rptm" (reads per ten millions) or "rpm" (reads per millions) method for small RNA data normalization (\emph{-d}). We supplied two ways for different requirements: rptm.r/rpm.r use raw reads, while rptm.m/rpm.m use mappable raw reads for normalization.
 
 Note the minimum (\emph{-n}), maximum (\emph{-x}) read length, minimum expression (\emph{-e}) level, mature (\emph{-u}) tsRNA expression level and family (\emph{-f}) threshold require postive number integers as inputs, filling by 0 will be replaced by the default values. The minimum and maximum read length shoud between 15 and 50 nt, threshold for sRNA family below 50 will switch off the sRNA classification function.
 
 tsRFinder can work in run and debug modes (\emph{-m}). In case of accessing some problems or some temporary files, you may enable the "debug" mode, otherwise use the "run" mode (default). To switch between interactive and non-interactive mode, set option \emph{-i} to "yes" or "no". To create a compressed tarball of the output file, use \emph{-o yes} option please. To check the usage or version, you can use \emph{-h} and \emph{-v} option, respectively.
 
 \subsection{Demo output}
+
+By default, tsRFinder delivers a summary files with some basic statistics. The predicted or user applied tRNA sequence ("label/tsRNA.fa"), the small RNA clean data ("label/sRNA.fa"), the tRNA reads ("label/tRNA.read.fa"), and the predicted tsRNA sequences ("label/tsRNA.seq") are listed. A figure ("label/distribution.pdf") showing the length distributions and base content of small RNA and tRNA reads (Figure \ref{distribution}) are included. Meanwhile, tsRFinder gives additional summary on tsRNA family ("label/tsRNA.fam"), and tRNA/tsRNA expression levels ("label/tsRNA.report.xls", including 5' tsRNA, 3' tsRNA and their abundance), text map (tmap, "label/tsRNA.tmap") showing mapping of small RNA to tRNA, graphics ("label/images/") showing the expression level based on small RNA data, the cleavage sites ("label/cleavage.txt"), and the cleavage profile ("label/cleavage\_profile.pdf", Figure \ref{cleavage}).
+
+Additionally, based on the base deep index ($ BDI = floor (9 \cdot \frac{X-X_{min}}{X_{max}-X_{min}}) $), we calculate and output the sensitivity, specificity and accuracy of the prediction.  These data tell the representativeness of tsRNA mature for all the tRNA reads mapped.
 
 Shown below is a demo summary:
 
@@ -264,10 +270,10 @@ Shown below is a demo summary:
 *     tRNA seq : Abc/tRNA.fa
          Total : 5
 *   sRNA reads : Abc/sRNA.fa
-         Total : 10005215
+         Total : 9998331
         Unique : 7227
 *   tRNA reads : Abc/tRNA.read.fa
-         Total : 236122
+         Total : 236079
         Unique : 50
 *    tsRNA seq : Abc/tsRNA.seq
          Total : 7
@@ -286,14 +292,10 @@ Shown below is a demo summary:
 * tsRNA family : Abc/tsRNA.fam
 * Stat. by BDI :
    Sensitivity : 0.9593
-   Specificity : 0.7825
-      Accuracy : 0.8819
+   Specificity : 0.827
+      Accuracy : 0.9045
 \end{verbatim}
 \end{tcolorbox}}
-
-By default, tsRFinder delivers a summary files with some basic statistics. The predicted or user applied tRNA sequence ("label/tsRNA.fa"), the small RNA clean data ("label/sRNA.fa"), the tRNA reads ("label/tRNA.read.fa"), and the predicted tsRNA sequences ("label/tsRNA.seq") are listed. A figure ("label/distribution.pdf") showing the length distributions and base content of small RNA and tRNA reads (Figure \ref{distribution}) are included. Meanwhile, tsRFinder gives additional summary on tsRNA family ("label/tsRNA.fam"), and tRNA/tsRNA expression levels ("label/tsRNA.report.xls", including 5' tsRNA, 3' tsRNA and their abundance), text map (tmap, "label/tsRNA.tmap") showing mapping of small RNA to tRNA, graphics ("label/images/") showing the expression level based on small RNA data, the cleavage sites ("label/cleavage.txt"), and the cleavage profile ("label/cleavage\_profile.pdf", Figure \ref{cleavage}).
-
-Additionally, based on the base deep index ($ BDI = floor (9 \cdot \frac{X-X_{min}}{X_{max}-X_{min}}) $), we calculate and output the sensitivity, specificity and accuracy of the prediction.  These data tell the representativeness of tsRNA mature for all the tRNA reads mapped.
 
 When compressed tarball output \emph{-o yes} is enabled, all the output files were in the \emph{label}.tgz for download, including the summary list.
 

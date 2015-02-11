@@ -45,8 +45,8 @@ tsRFinder usage:
 
     -c  Configuration file
     -l  Label
-    -g  Reference genomic sequence file, conflict with -t
-    -t  Reference tRNA sequence file, conflict with -g
+    -g  Reference genomic sequence file
+    -t  Reference tRNA sequence file
     -s  sRNA sequence file
     -a  Adaptor sequence
     -n  Min read length               [default 18]
@@ -54,7 +54,8 @@ tsRFinder usage:
     -e  Min expression level          [default 10]
     -u  Mature tsRNA level cut-off    [default 10]
     -f  sRNA family threshold         [default 72]
-    -d  Method for sRNA normalization [default rptm/rpm/no]
+    -d  Method for sRNA normalization [default rptm.r/no]
+        Can be rptm.r/rpm.r/rtpm.m/rptm.m/no
     -w  tRNA with/without label       [default no/yes]
     -o  Output compressed tarball     [default no/yes]
     -i  Interactive                   [default yes/no]
