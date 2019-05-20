@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 #===============================================================================
 #
 #         File: tsRFinder.pl
@@ -67,7 +67,7 @@ sub find_tsRNA {
 
 	# Create output directory
 	create_directory();
-	
+
 	# Build reference tRNA dataset
 	tRNA_scan();
 
@@ -587,7 +587,7 @@ sub format_tRNA {
 
 # A protocal for tRNA prediction
 sub predict_tRNA {
-	
+
 	# To build a reference tRNA sequence and its sencondary structure file
 	run_tRNAscanSE();
 
@@ -631,20 +631,20 @@ sub run_tRNAscanSE {
 sub extract_tRNA {
 
 	print_log("Extracting tRNA sequences ... ");
-	
+
 	my $ss_file = "trna.ss";
 	my $trna_file = "_trna.sq";
 
 	print_log("Processing file $ss_file ...");
 
-	# Hold the ss_file content in $trna_ss		
+	# Hold the ss_file content in $trna_ss
 	open (SS, "$label/$ss_file") or die "Cannot open file $ss_file: $!\n";
 	my $trna_ss = undef;
 	while (<SS>) {
 		$trna_ss .= $_;
 	}
 	close SS;
-	
+
 	# Split the sequence and secondary structure of each tRNA
 	open (OUT, ">$label/$trna_file") or die "Cannot open file $trna_file: $!\n";
 	my @trna = split /\n\n/, $trna_ss;
@@ -696,8 +696,8 @@ sub unique_tRNA {
 	# Generate summary file without redundancy
 	my %count = ();
 	print_log("The number of unique triplet:");
-	my $trna_file = "_trna.sq"; 
-	
+	my $trna_file = "_trna.sq";
+
 	# Foreach triplet
 	foreach my $ac (@code) {
 		# Prepare to write the sencondary sequences
@@ -738,7 +738,7 @@ sub unique_tRNA {
 		my $aa = anticodon_to_aa($ac);
 		print_log("$aa\t$count{$ac}");
 	}
-	
+
 	# Write tRNA sequence file with sencondary structure
 	system("cat $label/_trna/* > $label/tRNA.fas");
 	# Write tRNA sequence file
@@ -842,7 +842,7 @@ sub format_reads {
 			$file = "$label/sRNA.fq";
 	}
 
-	# Detect the file type of sRNA supplied	
+	# Detect the file type of sRNA supplied
 	my $file_type = fastq_or_fasta($file);
 
 	# Formating the raw data or clean data
@@ -991,6 +991,9 @@ sub normalization {
 	}
 
 	my ($total, $unique) = read_stat($raw);
+	if ($total == 0 or $unique == 0) {
+		die "No available reads found in $raw\n";
+	}
 	open (IN, $raw) or die "Cannot open file $raw: $!\n";
 	open (OUT, ">$normed") or die "Cannot open file $normed: $!\n";
 	while (<IN>) {
@@ -1089,7 +1092,7 @@ sub process_raw {
 		print_log("No such file: $file");
 		exit;
 	}
-	
+
 	system("mkdir $label/_raw");
 
 	# fastq --> fasta
@@ -1101,7 +1104,7 @@ sub process_raw {
 	unless ( $adaptor =~ /[^ATCGatcg]/) {
 		if ( length($adaptor) >= 30 ) {
 			print_log("Adaptor is too long, please check it!");
-			exit;	
+			exit;
 		} else {
 			fasta_clipper();
 		}
@@ -1117,8 +1120,8 @@ sub process_raw {
 	# 18-30 nt is OK but may lose some large tsRNA reads
 	print_log("Remove reads length less than 15 or more than 50 ...");
 	fasta_len_filter();
-	
-	# Collapse the fasta sequence to generate a non-redundant fasta file	
+
+	# Collapse the fasta sequence to generate a non-redundant fasta file
 	print_log("Collapsing ...");
 	collapse_fasta();
 
@@ -1239,7 +1242,7 @@ sub start_log {
 	my $pwd =`pwd`;
 
 	chomp $pwd;
-	
+
 	if ( -e "$pwd/tsRFinder.log") {
 		unlink "tsRFinder.log";
 	}
@@ -1325,14 +1328,14 @@ sub map_srna {
 			s/\s//g;
 			$refsize{$refid} += length ($_);
 		}
-	} 
+	}
 	close REF;
 
 	# Process map file
 	opendir (DM, $dir_map ) or die "Cannot open $dir_map: $!\n";
 	print_log("Processing map file ...");
 	foreach my $file (sort readdir DM) {
-		
+
 		# Process only *.map file
 		next unless $file =~ /\.map$/;
 
@@ -1388,7 +1391,7 @@ sub map_srna {
 	}
 	closedir DM;
 
-	# Plot pattern  	
+	# Plot pattern
 	chdir "$dir";
 	if ($mode eq "debug") {
 		system("R CMD BATCH $tsR_dir/lib/draw_map.r");
@@ -1403,12 +1406,12 @@ sub map_srna {
 # Identify tsRNA from tRNA map
 sub define_tsRNA {
 
-	# File variables 
+	# File variables
 	my $outputmap  = "$label/tsRNA.tmap";        # Output text map file
 	my $matureseq  = "$label/tsRNA.seq";         # Mature tsRNA file
 	my $report     = "$label/tsRNA.report.xls";  # Report file
 	my $trna_reads = "$label/tRNA.read.fa";      # tRNA reads
-	my $refseq     = "$label/tRNA.fas";	         # Reference SS file 
+	my $refseq     = "$label/tRNA.fas";	         # Reference SS file
 
 	print_log("Finding tsRNA ...");
 
@@ -1436,7 +1439,7 @@ sub define_tsRNA {
 			chomp $next;
 			$clover{$refid} = $next;
 		}
-	} 
+	}
 	close REF;
 
 	print_log("\tParsing tRNA map ...");
@@ -1489,7 +1492,7 @@ sub define_tsRNA {
 		close MAP;
 
 		next unless (defined ($refid));
-		
+
 		# Extract tRNA reads / tRNA abundance
 		my %trna_num = ();
 		foreach my $map (@map) {
@@ -1520,11 +1523,11 @@ sub define_tsRNA {
 
 		# Parse tRNA struture
 		my ($arm5, $loop) = ();
-		if ( $clover{$refid} =~ 
+		if ( $clover{$refid} =~
 			m/	(^[\>|\.]+\>\.+\<[\<|\.]+		# first loop
 				  [\>|\.]+\>)(\.+)\<[\<|\.]+	# second loop
 				  [\>|\.]+\>\.+\<[\<|\.]+		# third loop, varloop or the last loop
-			/x) {	
+			/x) {
 			$arm5 = $1;
 			$loop = $2;
 		} else {
@@ -1599,7 +1602,7 @@ sub define_tsRNA {
 
 		print OUT "/>\n";
 
-		
+
 		# Write report file
 		# The tRNA and its expression
 		print RPT $refid, "\t", $trna_num{$refid}, "\t";
@@ -1662,7 +1665,7 @@ sub format_tsRNA {
 	my ($map, $refsize) = @_;
 
 	return if (!defined $map);
-	
+
 	my $left = $map->{"start"};
 	my $right = $refsize->{$map->{"rid"}} - $map->{"end"};
 	# produce a lot of stars as the read flanking
@@ -1838,7 +1841,7 @@ sub number_of_arms {
 	$uni5 = keys %tsR5;
     $uni3 = keys %tsR3;
 
-	return ($tot5, $tot3, $uni5, $uni3); 
+	return ($tot5, $tot3, $uni5, $uni3);
 
 }
 
@@ -2450,7 +2453,7 @@ exit;
   tsRFinder.pl <option>
   For example: ./tsRFinder.pl -c demo/tsR.conf
   Type "./tsRFinder.pl -h" to see all the options
- 
+
 =head1 AUTHOR
 
   Qinhu Wang
