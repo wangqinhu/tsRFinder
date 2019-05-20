@@ -21,7 +21,7 @@ no if $] >= 5.017011, warnings => 'experimental::smartmatch';
 
 # Environment
 my $version = '1.0.0';
-my $status = "development";
+my $status = "release";
 my $tsR_dir = $ENV{"tsR_dir"};
 my %option;
 my %config;
